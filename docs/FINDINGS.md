@@ -50,9 +50,11 @@ These are modeled effects that hold the other inputs fixed. Real behaviour chang
 
 Across 77 districts, the district-level Spearman ρ between unemployment and median runway is −0.08, and between average salary and median runway it is +0.14. These are weak ecological associations and say nothing about individuals.
 
+The districts are the bank's original branch districts in the Czech Republic (names such as Praha or Brno). The organizers converted all money to CAD but left the geography as is, so this result is not about Canadian regions.
+
 ## Limitations
 
 - The data is observational, so none of the above are causal effects.
 - B is an average balance in one bank account. Customers may hold savings elsewhere.
 - Loan status and buffers are measured at the end of the window (possible reverse causality).
-- The dataset is the anonymized PKDD'99 financial data with amounts in CAD as stated by the challenge.
+- The dataset is the anonymized PKDD'99 financial data from a Czech bank. The organizers converted all money (balances, transactions, bills, loans, salaries) to CAD; shocks are sized with Canadian sources (EI, Statistics Canada CPI and rents).

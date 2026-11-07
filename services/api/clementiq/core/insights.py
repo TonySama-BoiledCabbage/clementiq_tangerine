@@ -180,7 +180,9 @@ def run_insights(f: pd.DataFrame) -> dict[str, Any]:
     regional = {"n_districts": int(len(reg)),
                 "rho_unemployment_vs_runway": float(reg.runway.corr(reg.unemp, method="spearman")) if len(reg) > 5 else None,
                 "rho_salary_vs_runway": float(reg.runway.corr(reg.salary, method="spearman")) if len(reg) > 5 else None,
-                "note": "District-level (ecological) association; does not describe individuals."}
+                "note": "Districts are the bank's original branch districts in the Czech Republic (PKDD'99 data; "
+                        "money converted to CAD by the organizers), so this is not a statement about Canadian regions. "
+                        "District-level (ecological) association; does not describe individuals."}
 
     # Headline findings — titles AND directions are derived from the computed values, never pre-written.
     fail6 = 1 - surv6
