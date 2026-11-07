@@ -1,0 +1,35 @@
+# secrets
+.env
+.env.*
+!.env.example
+!apps/web/.env.example
+infrastructure/certs/*
+!infrastructure/certs/.gitkeep
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+*.egg-info/
+
+# node / next
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# data: transactions.csv exceeds GitHub's 100 MB limit — the gzipped copy is committed instead
+data/transactions.csv
+data/processed/*
+!data/processed/.gitkeep
+
+# os / editors
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/extensions.json

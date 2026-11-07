@@ -1,0 +1,17 @@
+{
+  "name": "clementiq",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ClementIQ — AI-powered financial resilience & global intelligence (Sheridan Datathon 2026, Tangerine track)",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:all": "node scripts/dev.mjs --worker",
+    "stop": "node scripts/dev.mjs --stop",
+    "dev:web": "npm --workspace apps/web run dev",
+    "build:web": "npm --workspace apps/web run build",
+    "lint:web": "npm --workspace apps/web run lint",
+    "typecheck": "npm --workspace apps/web run typecheck",
+    "test:web": "npm --workspace apps/web run test"
+  }
+}

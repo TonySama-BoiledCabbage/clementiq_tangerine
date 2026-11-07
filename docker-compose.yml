@@ -1,0 +1,66 @@
+# ClementIQ full stack. `docker compose up -d --build`
+# Local: TimescaleDB (same engine as Tiger Data). Production: point DATABASE_URL at Tiger Cloud and
+# run `docker compose up -d --build api worker web proxy` (the db service is then unused).
+name: clementiq
+
+services:
+  db:
+    image: timescale/timescaledb:2.17.2-pg16
+    environment:
+      POSTGRES_USER: clementiq
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-clementiq-local}
+      POSTGRES_DB: clementiq
+    volumes: [dbdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clementiq"]
+      interval: 5s
+      retries: 20
+    profiles: ["local-db"]
+
+  migrate:
+    build: { context: ., dockerfile: services/api/Dockerfile }
+    env_file: .env
+    command: ["sh", "-c", "python -m clementiq.cli migrate && python -m clementiq.cli import && python -m clementiq.cli timescale"]
+    volumes: ["./data:/app/data:ro"]
+    environment: { DATA_DIR: /app/data }
+    restart: "no"
+    profiles: ["setup"]
+
+  api:
+    build: { context: ., dockerfile: services/api/Dockerfile }
+    env_file: .env
+    environment: { DATA_DIR: /app/data, CLEMENTIQ_ENV: production }
+    volumes: ["./data:/app/data:ro"]
+    restart: unless-stopped
+    expose: ["8000"]
+
+  worker:
+    build: { context: ., dockerfile: services/worker/Dockerfile }
+    env_file: .env
+    environment: { CLEMENTIQ_ENV: production }
+    restart: unless-stopped
+    depends_on: [api]
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args: { NEXT_PUBLIC_SHOW_DEMO_CODES: "${NEXT_PUBLIC_SHOW_DEMO_CODES:-false}" }
+    environment: { API_PROXY_TARGET: "http://api:8000" }
+    restart: unless-stopped
+    expose: ["3000"]
+    depends_on: [api]
+
+  proxy:
+    image: nginx:1.27-alpine
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./infrastructure/nginx/clementiq.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./infrastructure/certs:/etc/nginx/certs:ro
+      - certbot-www:/var/www/certbot:ro
+    depends_on: [web, api]
+    restart: unless-stopped
+
+volumes:
+  dbdata:
+  certbot-www:
