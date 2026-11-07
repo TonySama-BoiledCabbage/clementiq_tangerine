@@ -72,20 +72,24 @@ python -c "import gzip,shutil;shutil.copyfileobj(gzip.open('../../data/transacti
 .venv/Scripts/python -m clementiq.cli migrate
 .venv/Scripts/python -m clementiq.cli import
 
-# 4. Run the API
-.venv/Scripts/python -m uvicorn clementiq.main:app --reload --port 8000
-
-# 5. Frontend (new terminal, repo root)
+# 4. Frontend dependencies (repo root)
+cd ../..
 npm install
-npm run dev:web                                           # http://localhost:3000
-
-# 6. Optional: background monitoring worker
-cd services/api && .venv/Scripts/python ../worker/worker.py
 ```
+
+Once setup is done, **one command starts everything** (from the repo root):
+
+```bash
+npm run dev        # backend :8000 + frontend :3000 → open http://localhost:3000   (Ctrl+C stops both)
+npm run dev:all    # same, plus the background monitoring worker
+npm run stop       # frees ports 8000/3000 if an earlier run was left behind
+```
+
+If a port is already in use, `npm run dev` says so and tells you to run `npm run stop`. To run the pieces separately instead, use `npm run dev:web`, or start the API on its own with `.venv/Scripts/python -m uvicorn clementiq.main:app --reload --port 8000` from `services/api`.
 
 Sign in at http://localhost:3000/login. The development access codes, which you should change in `.env`, are: judge `tangerine-judge`, customer `tangerine-customer` (plus an `account_id`), and admin `tangerine-admin`.
 
-VS Code tasks (**Terminal → Run Task**) cover all of the above: *API: run*, *Web: dev*, *Worker: run*, *Data: import CSVs*, *Tests: backend*, and *ClementIQ: start all*.
+VS Code tasks (**Terminal → Run Task**) cover all of the above: *ClementIQ: start all* (the same as `npm run dev`), *API: run*, *Web: dev*, *Worker: run*, *Data: import CSVs* and *Tests: backend*.
 
 ### Tests
 

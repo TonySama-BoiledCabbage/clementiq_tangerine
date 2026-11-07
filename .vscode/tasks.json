@@ -6,6 +6,7 @@
     { "label": "Worker: run", "type": "shell", "command": "${workspaceFolder}/services/api/.venv/Scripts/python ../worker/worker.py", "options": { "cwd": "${workspaceFolder}/services/api" }, "isBackground": true, "problemMatcher": [] },
     { "label": "Data: import CSVs", "type": "shell", "command": "${workspaceFolder}/services/api/.venv/Scripts/python -m clementiq.cli import", "options": { "cwd": "${workspaceFolder}/services/api" }, "problemMatcher": [] },
     { "label": "Tests: backend", "type": "shell", "command": "${workspaceFolder}/services/api/.venv/Scripts/python -m pytest -q", "options": { "cwd": "${workspaceFolder}/services/api" }, "group": "test", "problemMatcher": [] },
-    { "label": "ClementIQ: start all", "dependsOn": ["API: run (port 8000)", "Web: dev (port 3000)"], "problemMatcher": [] }
+    { "label": "ClementIQ: start all", "type": "shell", "command": "npm run dev", "isBackground": true, "problemMatcher": [] },
+    { "label": "ClementIQ: stop (free ports 8000/3000)", "type": "shell", "command": "npm run stop", "problemMatcher": [] }
   ]
 }
