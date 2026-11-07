@@ -46,7 +46,7 @@ export default function InsightsPage() {
   const fq = d?.runway_by_fixed_burden.map((r) => ({ ...r, err: r.ci95[0] !== null && r.ci95[1] !== null ? [r.median_runway_ei55 - r.ci95[0]!, r.ci95[1]! - r.median_runway_ei55] : [0, 0] })) ?? [];
   return (
     <div className="space-y-6">
-      <SectionTitle title="Insights & Discovery" subtitle="Computed live from all accounts in the Tangerine dataset. Associations, not causes — sample sizes shown." />
+      <SectionTitle title="Portfolio Findings" subtitle="Computed live from all accounts in the Tangerine dataset. Associations, not causes — sample sizes shown." />
       {q.error && <ErrorState error={q.error} retry={q.refetch} />}
       {q.isLoading && <Skeleton className="h-96" />}
       {d && !d.available && <p className="text-sm text-ink-2">{d.reason}</p>}

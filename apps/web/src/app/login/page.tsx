@@ -88,12 +88,12 @@ export default function LoginPage() {
       <div className="brand-gradient hidden flex-col justify-between p-10 text-white lg:flex">
         <Logo light />
         <div>
-          <h1 className="text-4xl font-extrabold leading-tight">Your Daily Dose of<br />Financial Intelligence</h1>
-          <p className="mt-3 max-w-md text-white/85">Know your numbers, test a shock, and get a plan — then see how events around the world could reach your budget.</p>
+          <h1 className="text-[56px] font-semibold leading-[1.07] tracking-[0.02em]">How long would<br />the money last?</h1>
+          <p className="mt-3 max-w-md text-white/85">Pick any customer, apply a shock, and get a plan built from their own numbers.</p>
           <ul className="mt-6 space-y-2 text-sm text-white/90">
-            <li>• Clement Core: deterministic, reproducible financial engine</li>
-            <li>• Clement Gemini: plain-language explanations, sourced and labelled</li>
-            <li>• WorldPulse: official statistics + news → modeled personal impact</li>
+            <li>• Runway computed with the exact README definitions</li>
+            <li>• Every twist card adjustable, every number traceable</li>
+            <li>• A Goal Plan and a Backup Plan the customer can act on</li>
           </ul>
         </div>
         <p className="text-xs text-white/70">Built for the Tangerine Financial Resilience Challenge · Sheridan Datathon 2026. Original branding; not affiliated with Tangerine Bank.</p>

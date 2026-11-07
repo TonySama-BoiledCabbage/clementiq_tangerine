@@ -3,11 +3,10 @@ import { Suspense, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "@/lib/store";
 import { Skeleton } from "@/components/ui/misc";
-import { AdvisorPanel } from "./AdvisorPanel";
 import { AppSidebar } from "./AppSidebar";
 import { TopNavigation } from "./TopNavigation";
 
-/** Authenticated application frame: header, left nav, main content, right AI advisor. */
+/** Authenticated application frame: header, left nav, main content (the AI side panel is not shown in the redesign). */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const token = useSession((s) => s.token);
   const expiresAt = useSession((s) => s.expiresAt);
@@ -34,14 +33,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2">Skip to content</a>
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-3 focus:py-2">Skip to content</a>
       <TopNavigation />
       <div className="flex">
         <AppSidebar />
-        <main id="main" className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <main id="main" className="mx-auto min-w-0 max-w-[1320px] flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <Suspense fallback={<Skeleton className="h-96" />}>{children}</Suspense>
         </main>
-        <Suspense><AdvisorPanel /></Suspense>
       </div>
     </div>
   );

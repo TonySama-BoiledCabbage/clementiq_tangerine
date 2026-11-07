@@ -3,15 +3,15 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "ClementIQ — Your Daily Dose of Financial Intelligence",
+  title: "ClementIQ — Financial Resilience Engine",
   description: "AI-powered financial resilience and global intelligence. Smart Guidance. A More Resilient You.",
   icons: { icon: "/icon.svg" },
 };
 
-export const viewport: Viewport = { themeColor: "#FF6B00", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#ffffff", width: "device-width", initialScale: 1 };
 
-// Applies a saved light/dark choice before paint (falls back to the OS preference).
-const themeScript = `try{var t=localStorage.getItem("clementiq-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}`;
+// Demo build is light-only: clear any saved dark choice from the original theme.
+const themeScript = `try{localStorage.removeItem("clementiq-theme")}catch(e){}`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

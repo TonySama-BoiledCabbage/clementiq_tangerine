@@ -40,22 +40,22 @@ export function ShockParameterSlider({ label, value, min, max, step = 1, unit, o
 }
 
 /** Editable list of combined shocks with type-specific sliders. */
-export function ShockScenarioSelector({ components, onChange, types, presets, onPreset, mode, sValue }: {
+export function ShockScenarioSelector({ components, onChange, types, presets, onPreset, mode, sValue, presetsLabel = "Scenario presets" }: {
   components: ShockComponent[]; onChange: (c: ShockComponent[]) => void; types: Record<string, string>; presets: Preset[];
-  onPreset: (p: Preset) => void; mode: "judging" | "extended"; sValue?: number;
+  onPreset: (p: Preset) => void; mode: "judging" | "extended"; sValue?: number; presetsLabel?: string;
 }) {
   const upd = (i: number, patch: Partial<ShockComponent>) => onChange(components.map((c, j) => (j === i ? { ...c, ...patch } : c)));
   const remove = (i: number) => onChange(components.filter((_, j) => j !== i));
   return (
     <div className="space-y-4">
-      <div>
-        <p className="mb-2 text-xs font-semibold text-ink-2">Scenario presets</p>
+      {presets.some((p) => mode === "extended" || p.judging) && <div>
+        <p className="mb-2 text-xs font-semibold text-ink-2">{presetsLabel}</p>
         <div className="flex flex-wrap gap-1.5">
           {presets.filter((p) => mode === "extended" || p.judging).map((p) => (
-            <button key={p.id} onClick={() => onPreset(p)} className="cursor-pointer rounded-full border border-line px-3 py-1 text-[11px] font-medium hover:border-tangerine hover:text-tangerine">{p.name}</button>
+            <button key={p.id} onClick={() => onPreset(p)} className="min-h-8 cursor-pointer rounded-full border border-line-strong px-3 py-1 text-xs font-medium hover:bg-peach">{p.name}</button>
           ))}
         </div>
-      </div>
+      </div>}
       {components.map((c, i) => (
         <div key={i} className="rounded-2xl border border-line bg-cream p-3">
           <div className="mb-2 flex items-center justify-between gap-2">

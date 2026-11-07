@@ -1,69 +1,52 @@
 @import "tailwindcss";
 
-/* ClementIQ design tokens — Tangerine-inspired warm fintech palette. */
-:root {
-  --tangerine: #ff6b00;
-  --tangerine-bright: #ff8a24;
-  --peach: #fff0e5;
-  --cream: #fff9f5;
-  --surface: #ffffff;
-  --ink: #111827;
-  --ink-2: #64748b;
-  --ink-3: #94a3b8;
-  --line: #f1e4d9;
-  --good: #16a34a;
-  --bad: #dc2626;
-  --warn: #b45309;
-  --invest: #8b5cf6;
-  --page: #fff9f5;
-  /* Validated categorical chart series (dataviz validator, light surface) */
-  --series-1: #e8590c;
-  --series-2: #7c3aed;
-  --series-3: #12936a;
-  --series-4: #2a78d6;
-  --grid: #efe6de;
-  --shadow: 0 1px 2px rgb(17 24 39 / 0.04), 0 8px 24px -12px rgb(255 107 0 / 0.18);
-}
+/* `dark:` utilities only apply when data-theme="dark" is set explicitly (the demo build is light-only). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --peach: #2a1d14;
-    --cream: #1b1612;
-    --surface: #1f1914;
-    --page: #17130f;
-    --ink: #f5efe9;
-    --ink-2: #b8aca0;
-    --ink-3: #8a7e73;
-    --line: #34291f;
-    --good: #22c55e;
-    --bad: #f87171;
-    --warn: #f59e0b;
-    --series-1: #d95926;
-    --series-2: #9085e9;
-    --series-3: #199e70;
-    --series-4: #3987e5;
-    --grid: #2d241c;
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.3);
-  }
-}
-:root[data-theme="dark"] {
-  --peach: #2a1d14;
-  --cream: #1b1612;
-  --surface: #1f1914;
-  --page: #17130f;
-  --ink: #f5efe9;
-  --ink-2: #b8aca0;
-  --ink-3: #8a7e73;
-  --line: #34291f;
-  --good: #22c55e;
-  --bad: #f87171;
-  --warn: #f59e0b;
-  --series-1: #d95926;
-  --series-2: #9085e9;
-  --series-3: #199e70;
-  --series-4: #3987e5;
-  --grid: #2d241c;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+/*
+ * ClementIQ design tokens — Composer-inspired "Bauhaus confetti on concrete" (ui-redesign branch).
+ * Token NAMES are kept from the original theme so existing components keep working:
+ *   --tangerine = accent (Signal Blue), --peach = subtle hover/selected fill, --cream = inner tile fill.
+ * Rules: one filled CTA style (black pill); colour carries STATUS only (good / warn / bad), always with
+ * an icon or words; confetti colours are decoration and never encode data.
+ */
+:root {
+  /* accent + neutrals */
+  --tangerine: #1871da;          /* Signal Blue — links, active nav, focus (4.9:1 on white) */
+  --tangerine-bright: #1f86ff;   /* Azure */
+  --peach: #f1f2f4;              /* hover / selected fill */
+  --cream: #f7f7f7;              /* Mist — inner tiles */
+  --surface: #ffffff;            /* Paper — cards, nav */
+  --page: #e5e7eb;               /* Concrete — canvas */
+  --ink: #000000;                /* Obsidian */
+  --ink-2: #5f5f5f;              /* secondary text (6.5:1 on white, 4.9:1 on canvas) */
+  --ink-3: #737373;              /* captions (4.7:1 on white) */
+  --line: #e5e7eb;               /* hairline */
+  --line-strong: #bec6cc;        /* Pebble */
+  --highlight: #ffb4ed;          /* Cotton Candy marker */
+
+  /* status (never decorative) */
+  --good: #31805a;               /* Forest Moss */
+  --good-bg: #e6f4ec;
+  --bad: #c60808;                /* Alert Red */
+  --bad-bg: #fbe9e9;
+  --warn: #7a4f00;               /* text on yellow */
+  --warn-bg: #fff1d1;
+  --invest: #9664d7;
+
+  /* confetti (decoration only) */
+  --confetti-blue: #1871da;
+  --confetti-green: #1ec072;
+  --confetti-pink: #f6609f;
+  --confetti-yellow: #ffbb38;
+
+  /* chart series: income/baseline = blue, spending/scenario = ember, fixed = violet, balance = moss */
+  --series-1: #e04e00;
+  --series-2: #9664d7;
+  --series-3: #31805a;
+  --series-4: #1871da;
+  --grid: #e5e7eb;
+  --shadow: none;
 }
 
 @theme inline {
@@ -77,19 +60,38 @@
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-highlight: var(--highlight);
   --color-good: var(--good);
+  --color-good-bg: var(--good-bg);
   --color-bad: var(--bad);
+  --color-bad-bg: var(--bad-bg);
   --color-warn: var(--warn);
+  --color-warn-bg: var(--warn-bg);
   --color-invest: var(--invest);
+  --color-confetti-blue: var(--confetti-blue);
+  --color-confetti-green: var(--confetti-green);
+  --color-confetti-pink: var(--confetti-pink);
+  --color-confetti-yellow: var(--confetti-yellow);
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --shadow-card: var(--shadow);
+  /* Composer geometry: containers ≤ 6px, icons 2px, buttons/tags are pills (rounded-full). */
+  --radius-lg: 6px;
+  --radius-xl: 6px;
+  --radius-2xl: 6px;
+  --radius-3xl: 6px;
 }
 
 html, body { background: var(--page); color: var(--ink); }
-body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-sans); font-feature-settings: "calt" 1; letter-spacing: 0.01em; -webkit-font-smoothing: antialiased; }
 .tabular { font-variant-numeric: tabular-nums; }
-.brand-gradient { background: linear-gradient(100deg, #ff6b00 0%, #ff8a24 55%, #ffa654 100%); }
-.peach-gradient { background: linear-gradient(135deg, var(--peach), var(--surface)); }
-:focus-visible { outline: 2px solid var(--tangerine); outline-offset: 2px; border-radius: 6px; }
+/* Big editorial number (the one thing on a screen that must be read from across the room). */
+.display-num { font-size: 64px; line-height: 1.07; font-weight: 600; letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+/* Marker-pen highlight for key figures in customer-facing copy. */
+.marker { background: var(--highlight); padding: 0 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+/* Legacy class names: now the single black filled style / flat mist panel. */
+.brand-gradient { background: #000000; color: #ffffff; }
+.peach-gradient { background: var(--cream); }
+:focus-visible { outline: 2px solid var(--tangerine); outline-offset: 2px; box-shadow: 0 1px 2px 0 rgba(24, 113, 218, 0.25); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 .recharts-tooltip-wrapper { outline: none; }

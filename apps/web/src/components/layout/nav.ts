@@ -1,27 +1,22 @@
-import {
-  Bell, Bot, CalendarClock, Coins, Database, Gavel, Globe2, LayoutDashboard, LifeBuoy, Lightbulb, Map, Newspaper,
-  Settings, ShieldCheck, TrendingUp, Wallet, Zap,
-} from "lucide-react";
+import { Activity, Database, LifeBuoy, Lightbulb, SlidersHorizontal, UserRound } from "lucide-react";
 
+/**
+ * Judging-path navigation (ui-redesign). Only what the 5-minute session needs:
+ *   Stress Test  — live twist (README parts 1–3 on one page)
+ *   Findings     — the portfolio-level "biggest finding" for the pitch
+ *   Customer     — deeper "know the customer" view for Q&A
+ * The original pages (WorldPulse, map, investments, Solana, advisor, timeline, alerts, resilience score)
+ * still exist as routes but are intentionally not linked.
+ */
 export const NAV = [
-  { href: "/", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard", label: "Financial Dashboard", icon: Wallet },
-  { href: "/simulator", label: "Shock Simulator", icon: Zap },
-  { href: "/recovery", label: "Recovery Plans", icon: LifeBuoy },
-  { href: "/worldpulse", label: "WorldPulse", icon: Newspaper },
-  { href: "/map", label: "Global Event Map", icon: Map },
-  { href: "/investments", label: "Investments & Stocks", icon: TrendingUp },
-  { href: "/solana", label: "Solana Portfolio", icon: Coins },
-  { href: "/advisor", label: "AI Financial Advisor", icon: Bot },
-  { href: "/resilience", label: "Financial Resilience Score", icon: ShieldCheck },
-  { href: "/timeline", label: "Financial Timeline", icon: CalendarClock },
-  { href: "/alerts", label: "Alerts & Notifications", icon: Bell },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/judge", label: "Stress Test", icon: Activity },
+  { href: "/insights", label: "Portfolio Findings", icon: Lightbulb },
+  { href: "/dashboard", label: "Customer Profile", icon: UserRound },
 ] as const;
 
-export const NAV_EXTRA = [
-  { href: "/insights", label: "Insights & Discovery", icon: Lightbulb },
-  { href: "/judge", label: "Judge Demo", icon: Gavel },
-  { href: "/admin", label: "Data Import", icon: Database },
-  { href: "/worldpulse?tab=indicators", label: "Economic Indicators", icon: Globe2 },
+export const NAV_MORE = [
+  { href: "/simulator", label: "Advanced Simulator", icon: SlidersHorizontal },
+  { href: "/recovery", label: "Recovery Plans", icon: LifeBuoy },
 ] as const;
+
+export const NAV_ADMIN = [{ href: "/admin", label: "Data Import", icon: Database }] as const;

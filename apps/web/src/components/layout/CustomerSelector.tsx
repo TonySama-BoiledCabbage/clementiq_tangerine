@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 interface AccountRow { account_id: number; income_I: number | null; buffer_B: number | null; resilience_score: number | null }
 
-export function CustomerSelector({ compact = false }: { compact?: boolean }) {
+export function CustomerSelector({ compact = false, autoFocus = false }: { compact?: boolean; autoFocus?: boolean }) {
   const { accountId, setAccount, role } = useSession();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
@@ -51,14 +51,14 @@ export function CustomerSelector({ compact = false }: { compact?: boolean }) {
 
   return (
     <div ref={box} className={`relative flex items-center gap-2 ${compact ? "" : "w-full sm:w-auto"}`}>
-      <form className="relative flex-1 sm:w-72" onSubmit={(e) => { e.preventDefault(); if (/^\d+$/.test(q)) choose(Number(q)); }}>
+      <form className="relative flex-1 sm:w-80" onSubmit={(e) => { e.preventDefault(); if (/^\d+$/.test(q)) choose(Number(q)); }}>
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-3" />
-        <input value={q} onChange={(e) => setQ(e.target.value.replace(/\D/g, "").slice(0, 8))} onFocus={() => setOpen(true)}
-          inputMode="numeric" aria-label="Enter account_id"
+        <input value={q} onChange={(e) => { setQ(e.target.value.replace(/\D/g, "").slice(0, 8)); setOpen(true); }} onFocus={() => { if (!autoFocus) setOpen(true); }} onClick={() => setOpen(true)}
+          inputMode="numeric" aria-label="Enter account_id" autoFocus={autoFocus}
           placeholder={accountId ? `Account ${accountId} — type another account_id` : "Enter any account_id (e.g. 20111)"}
-          className="h-10 w-full rounded-xl border border-line bg-surface pl-9 pr-3 text-sm focus:border-tangerine focus:outline-none focus:ring-2 focus:ring-tangerine/20" />
+          className="h-11 w-full rounded-full border border-line-strong bg-surface pl-9 pr-4 text-sm focus:border-tangerine focus:outline-none focus:ring-2 focus:ring-tangerine/20" />
         {open && (
-          <ul className="absolute z-30 mt-1 w-full overflow-hidden rounded-xl border border-line bg-surface shadow-xl" role="listbox">
+          <ul className="absolute z-30 mt-1 w-full overflow-hidden rounded-md border border-line bg-surface shadow-lg" role="listbox">
             {list.isLoading && <li className="p-3 text-xs text-ink-2">Searching…</li>}
             {list.data?.items.map((a) => (
               <li key={a.account_id}>
