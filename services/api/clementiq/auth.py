@@ -57,8 +57,9 @@ def issue_token(req: LoginRequest) -> dict:
     s = get_settings()
     expected = {"judge": s.judge_access_code, "admin": s.admin_access_code,
                 "customer": s.demo_customer_access_code}[req.role]
-    if not _code_ok(req.access_code, expected):
-        raise HTTPException(401, "invalid access code")
+    if not _code_ok(req.access_code.strip(), expected):
+        raise HTTPException(401, f"Invalid access code for the '{req.role}' role. "
+                                 f"Check that the matching role card is selected.")
     if req.role == "customer" and req.account_id is None:
         raise HTTPException(422, "customer login requires account_id")
     sub = f"{req.role}:{req.account_id}" if req.role == "customer" else f"{req.role}:{(req.display_name or 'demo').lower()}"

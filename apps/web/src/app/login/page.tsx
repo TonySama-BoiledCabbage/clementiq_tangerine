@@ -40,7 +40,7 @@ function LoginForm() {
     setErr(null);
     try {
       const r = await api<{ access_token: string; role: Role; sub: string; account_id: number | null; expires_at: string }>(
-        "/auth/demo-login", { method: "POST", json: { role: v.role, access_code: v.access_code, account_id: v.account_id ? Number(v.account_id) : null } });
+        "/auth/demo-login", { method: "POST", json: { role: v.role, access_code: v.access_code.trim(), account_id: v.account_id ? Number(v.account_id) : null } });
       setSession({ token: r.access_token, role: r.role, sub: r.sub, account_id: r.account_id, expires_at: r.expires_at });
       router.replace(next.startsWith("/") ? next : "/");
     } catch (e) {
@@ -71,7 +71,7 @@ function LoginForm() {
         <Label htmlFor="code">Access code</Label>
         <div className="relative">
           <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-3" />
-          <Input id="code" type="password" autoComplete="current-password" className="pl-9" {...register("access_code")} />
+          <Input id="code" type="text" autoComplete="off" spellCheck={false} placeholder={`e.g. tangerine-${role}`} className="pl-9" {...register("access_code")} />
         </div>
         {errors.access_code && <p className="mt-1 text-xs text-bad">{errors.access_code.message}</p>}
         {showCodes && <p className="mt-1 text-[11px] text-ink-3">Development codes (from .env.example): judge <code>tangerine-judge</code> · customer <code>tangerine-customer</code> · admin <code>tangerine-admin</code></p>}
