@@ -18,7 +18,7 @@ import { ShockScenarioSelector } from "@/components/finance/Shock";
 import { AIInsightCard } from "@/components/ai/AIInsightCard";
 import {
   ANALYST_DEFAULT, BackupView, Disclosure, FEATURED, GoalCard, NowCard, Note, ResultView, Section, ShockPicker, TONE_TEXT, TypicalMonth,
-  bigRunway, edgeCases, riskOf, runwayCaption, runwayTone, useAccountExtras, useShock,
+  anyRisk, bigRunway, edgeCases, riskOf, runwayCaption, runwayTone, useAccountExtras, useShock,
 } from "@/components/stress/parts";
 
 interface Verify { inputs: Record<string, number>; rows: { twist: string; reference: string; engine: string; match: boolean }[]; all_match: boolean; formulas: Record<string, string> }
@@ -99,7 +99,7 @@ export default function StressTestPage() {
                     <div key={k}><dt className="text-[12px] text-ink-3">{({ I: "Income", S: "Spending", B: "Buffer", P: "Loan pmt" })[k]} ({k})</dt><dd className="tabular text-[17px] font-semibold">{money(j[k])}</dd></div>
                   ))}
                   <div><dt className="text-[12px] text-ink-3">Runway today</dt>
-                    <dd className={cn("tabular text-[17px] font-semibold", TONE_TEXT[runwayTone(j.runway, j, risk)])}>{bigRunway(j.runway)} <span className="text-[12px] font-normal text-ink-3">{j.runway.no_shortfall ? "no shortfall" : "months"}</span></dd></div>
+                    <dd className={cn("tabular text-[17px] font-semibold", TONE_TEXT[runwayTone(j.runway, j, risk)])}>{bigRunway(j.runway)} <span className="text-[12px] font-normal text-ink-3">{j.runway.no_shortfall ? (anyRisk(risk) ? "formula only, see flags" : "no shortfall") : "months"}</span></dd></div>
                 </dl>
                 <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
                   {flags.length ? flags.map((f) => <Badge key={f.text} tone={f.tone === "bad" ? "bad" : "warn"}>{f.text}</Badge>) : obl.data && <Badge tone="good"><CheckCircle2 aria-hidden /> No flags</Badge>}

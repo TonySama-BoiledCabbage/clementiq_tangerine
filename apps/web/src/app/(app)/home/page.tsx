@@ -4,7 +4,7 @@ import { ArrowRight, ShieldAlert } from "lucide-react";
 import { useAccount, useSummary } from "@/lib/hooks";
 import { ErrorState, Skeleton } from "@/components/ui/misc";
 import { useRoleGate } from "@/components/layout/useRoleGate";
-import { GoalCard, NowCard, Note, edgeCases, ei55Runway, riskOf, useAccountExtras } from "@/components/stress/parts";
+import { GoalCard, NowCard, anyRisk, Note, edgeCases, ei55Runway, riskOf, useAccountExtras } from "@/components/stress/parts";
 
 /**
  * Customer Home: "am I OK this month?" first.
@@ -20,7 +20,8 @@ export default function HomePage() {
   const j = s.data?.judging;
   const risk = riskOf(j, obl.data);
   const ei = j ? ei55Runway(j) : null;
-  const fragile = !!j && j.S > 0 && ei != null && ei < 6;
+  // "Fragile" = fine today but thin under a layoff (brief: Space by account state). At-risk customers fix this month first.
+  const fragile = !!j && j.S > 0 && ei != null && ei < 6 && !anyRisk(risk);
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">

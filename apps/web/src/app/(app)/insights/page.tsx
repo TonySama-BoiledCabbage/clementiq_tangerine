@@ -21,7 +21,7 @@ function AttentionPreview() {
   const q = useQuery({ queryKey: ["needs-attention", null, "top5"], queryFn: () => api<Attention>("/insights/needs-attention?limit=5") });
   const d = q.data;
   if (q.error) return <ErrorState error={q.error} />;
-  if (!d) return <Skeleton className="h-56 rounded-2xl shadow-card" />;
+  if (!d) return <Skeleton className="h-56 rounded-[22px]" />;
   return (
     <Card>
       <CardHeader>
@@ -31,16 +31,16 @@ function AttentionPreview() {
       <CardContent className="space-y-4">
         <p className="text-[17px] leading-relaxed">
           <span className="tabular font-display text-[34px] font-bold leading-none text-tangerine">{d.counts.green_under_formula}</span>{" "}
-          of the {d.total} flagged accounts show <b>no shortfall</b> under the README runway formula, yet are short this month, behind on a loan or holding under one month of savings.
+          of the {d.total} flagged accounts get the README formula&apos;s best score, <b>120 months of runway</b>, yet are short this month, behind on a loan or holding under one month of savings.
         </p>
-        <ul className="divide-y-[0.5px] divide-line overflow-hidden rounded-xl bg-cream">
+        <ul className="divide-y-[0.5px] divide-line overflow-hidden rounded-[14px] bg-cream">
           {d.items.map((it) => (
             <li key={it.account_id}>
               <Link href={`/judge?account=${it.account_id}`} className="flex min-h-12 items-center gap-3 px-4 py-2 hover:bg-peach">
                 <span className="tabular w-16 font-semibold">#{it.account_id}</span>
                 <span className="flex flex-1 flex-wrap gap-1">{it.flags.map((f) => <Badge key={f} tone={f === "thin" ? "warn" : "bad"}>{FLAG_LABEL[f]}</Badge>)}</span>
                 <span className="tabular hidden text-[13px] text-ink-2 sm:inline">{money(it.left_after_fixed)} after fixed</span>
-                <ChevronRight className="size-4 text-chevron" aria-hidden />
+                <ChevronRight className="size-4 text-[#c7c7cc]" aria-hidden />
               </Link>
             </li>
           ))}

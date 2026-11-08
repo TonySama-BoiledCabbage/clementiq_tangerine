@@ -101,7 +101,13 @@ def needs_attention(limit: int = Query(50, ge=1, le=500), offset: int = Query(0,
     } for r in page.itertuples()]
     counts = {k: int(df[k].sum()) if len(df) else 0 for k in ("short", "behind", "thin")}
     # How many of these look safe under the judge formula alone (typical income >= spending -> "no shortfall, 120+").
-    counts["green_under_formula"] = int(((df["income_I"] >= df["spending_S"]) & (df["buffer_B"] > 0)).sum()) if len(df) else 0
+    # Flagged accounts the README formula scores at its maximum (runway capped at 120 months, no shock).
+    if len(df):
+        gap = df["spending_S"] - df["income_I"]
+        at_cap = (df["buffer_B"] > 0) & ((gap <= 0) | (df["buffer_B"] >= 120 * gap))
+        counts["green_under_formula"] = int(at_cap.sum())
+    else:
+        counts["green_under_formula"] = 0
     return {
         "total": int(len(df)), "matching": int(len(view)), "flag": flag, "active_accounts": n_active,
         "share": round(len(df) / n_active, 4) if n_active else 0.0,

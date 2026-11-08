@@ -84,19 +84,11 @@ The flag rules must match the backend `services/api/clementiq/core/attention.py`
 - `GET /api/insights` is now staff only; `GET /admin/imports` requires admin.
 - Twist preset `mortgage_renewal` (loan payment +6%; 2026 renewals averaged roughly that per BoC/TD — don't oversell).
 
-## 4. Design system (swappable designs, light only)
+## 4. Design system (iOS 27 look, light only)
 
-Designs live in `apps/web/src/themes/` — **read `themes/README.md` before touching any style.** One CSS file per design fills a fixed token
-contract (`contract.ts`); `globals.css` is design-agnostic and maps tokens onto Tailwind. Active design = `<html data-design>`:
-default **`fold`** (Fold "Bauhaus poster on fog", from `themes/specs/fold.DESIGN.md`), alternative `ios27` (the previous look).
-Switch with `?design=ios27` / `?design=fold` / `?design=reset`, or `NEXT_PUBLIC_DESIGN` at deploy time. To try another design: add `<id>.css`
-(+ spec in `themes/specs/`), register it in `themes/index.ts`; `npm.cmd run test:web` checks token completeness and WCAG AA contrast.
-- **No colour / radius / shadow / font literals in components** — use the token classes (`bg-surface`, `text-ink-3`, `bg-field`, `rounded-2xl`
-  = card, `rounded-xl` = inset tile, `rounded-full` = capsule, `shadow-card`, `.glass`, `.hero-bg`). Names are kept from the old theme:
-  `--tangerine` = the action colour (Fold: Midnight Navy, ios27: blue), not literally orange.
-- Fold deviates from its spec on purpose where the spec fails AA (Smoke/Electric Blue as text, 100px hero on data screens); see `themes/fold.css` header.
-- Status colours (`--good` `#1f7d36`, `--bad`, `--warn`) are shared by both designs and carry meaning; darkened `--good` for AA.
-- Shared: 44pt minimum hit targets; `.glass` only on floating chrome (top bar, tab bar) — each design decides blur/edge/shadow.
+Tokens in `apps/web/src/app/globals.css` (names kept from the old theme for compatibility): `--tangerine` is the accent **#0071e3**,
+page `#f2f2f7`, ink `#1d1d1f / #48484a / #6e6e73`, lines `#e5e5ea`, status good `#248a3d` / bad `#d70015` / warn `#b25000` with `*-bg`.
+Cards 22px radius, no border; capsule buttons; 44pt minimum hit targets; Liquid Glass (`.glass`) only on floating chrome (top bar, tab bar).
 Classes: `.large-title` (34px), `.display-num` (64px), `.marker` (highlighter), `.tabular`.
 On phones the floating tab bar is `position: fixed`; anything wider than the viewport pushes it off screen — use `min-w-0` on grid children.
 
@@ -118,5 +110,7 @@ On phones the floating tab bar is `position: fixed`; anything wider than the vie
 3. Demo script for the 5-minute judging slot: Accounts → 37897/95678 → twist cards → plans → Findings "82" → switch to customer 95678 on a phone width.
 4. AI explanation needs `GEMINI_API_KEY` in the repo-root `.env` (see `.env.example`); without it the template fallback is used — check which one the demo shows.
 5. Before the demo: run every check in section 1, click through all three roles on desktop and a 390px phone width, browser translation off.
+
+Pitch differentiators with evidence: `docs/TRUMP_CARDS.md` (numbers reproduce via `scripts/trump_card_facts.py`; re-run after any data or rule change).
 
 Team docs (claude.ai): "ClementIQ 产品 Brief" (bilingual product brief, section 11 = this IA and its gap table) and "Datathon 队伍简报".

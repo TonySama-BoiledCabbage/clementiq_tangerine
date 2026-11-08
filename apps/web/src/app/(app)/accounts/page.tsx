@@ -38,12 +38,12 @@ export default function AccountsPage() {
 
       <CustomerSelector destination="/judge" />
       {q.error && <ErrorState error={q.error} />}
-      {!d ? <Skeleton className="h-24 rounded-2xl shadow-card" /> : (
-        <section aria-label="Needs attention summary" className="rounded-2xl shadow-card bg-surface p-5">
+      {!d ? <Skeleton className="h-24 rounded-[22px]" /> : (
+        <section aria-label="Needs attention summary" className="rounded-[22px] bg-surface p-5">
           <p className="text-[15px] leading-relaxed">
             <span className="tabular text-[28px] font-bold leading-none">{d.total.toLocaleString()}</span>{" "}
             of {d.active_accounts.toLocaleString()} active accounts ({(d.share * 100).toFixed(1)}%) have a flag today.
-            <span className={d.counts.green_under_formula > 0 ? undefined : "hidden"}> <span className="marker font-semibold">{d.counts.green_under_formula}</span> of them look safe under the runway formula alone.</span>
+            <span className={d.counts.green_under_formula > 0 ? undefined : "hidden"}> <span className="marker font-semibold">{d.counts.green_under_formula}</span> of them score the maximum 120-month runway under the judge formula.</span>
           </p>
           <div role="group" aria-label="Filter by flag" className="mt-4 flex flex-wrap gap-2">
             {([null, "short", "behind", "thin"] as const).map((f) => (
@@ -58,10 +58,10 @@ export default function AccountsPage() {
 
       {d && (
         <section aria-label="Needs attention list">
-          <ul className="divide-y-[0.5px] divide-line overflow-hidden rounded-2xl shadow-card bg-surface">
+          <ul className="divide-y-[0.5px] divide-line overflow-hidden rounded-[22px] bg-surface">
             {d.items.map((it) => (
               <li key={it.account_id}>
-                <Link href={`/judge?account=${it.account_id}`} className="flex min-h-16 items-center gap-4 px-5 py-3 hover:bg-cream active:bg-press">
+                <Link href={`/judge?account=${it.account_id}`} className="flex min-h-16 items-center gap-4 px-5 py-3 hover:bg-[#f5f5f7] active:bg-[#e8e8ed]">
                   <div className="w-20 shrink-0"><p className="tabular text-[17px] font-semibold">#{it.account_id}</p></div>
                   <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
                     {it.flags.map((f) => <Badge key={f} tone={f === "thin" ? "warn" : "bad"}>{FLAG_LABEL[f]}</Badge>)}
@@ -74,7 +74,7 @@ export default function AccountsPage() {
                     <p className="text-[12px] text-ink-3">If laid off (EI 55%)</p>
                     <p className="tabular text-[15px] font-semibold">{it.runway_ei55 == null ? "120+" : `${it.runway_ei55.toFixed(1)} mo`}</p>
                   </div>
-                  <ChevronRight className="size-4 shrink-0 text-chevron" aria-hidden />
+                  <ChevronRight className="size-4 shrink-0 text-[#c7c7cc]" aria-hidden />
                 </Link>
               </li>
             ))}
