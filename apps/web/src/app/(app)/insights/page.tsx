@@ -1,7 +1,8 @@
 "use client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, ErrorBar, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Lightbulb, Snowflake } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, ChevronRight, Lightbulb, Snowflake } from "lucide-react";
 import { api } from "@/lib/api";
 import { pct } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,48 @@ import { ErrorState, Skeleton, Spinner } from "@/components/ui/misc";
 import { SectionTitle } from "@/components/ui/misc";
 import { ChartTooltip, DataTable, SERIES, axisProps, gridProps } from "@/components/finance/chart-kit";
 import { EngineBadge } from "@/components/finance/EngineBadge";
+import { Badge } from "@/components/ui/badge";
+import { money } from "@/lib/format";
+import { useRoleGate } from "@/components/layout/useRoleGate";
+import { FLAG_LABEL, type Attention } from "@/components/stress/attention";
+
+/** The headline for the pitch: risk the runway formula alone can't see, and who to call first. */
+function AttentionPreview() {
+  const q = useQuery({ queryKey: ["needs-attention", null, "top5"], queryFn: () => api<Attention>("/insights/needs-attention?limit=5") });
+  const d = q.data;
+  if (q.error) return <ErrorState error={q.error} />;
+  if (!d) return <Skeleton className="h-56 rounded-[22px]" />;
+  return (
+    <Card>
+      <CardHeader>
+        <div><CardTitle>Biggest finding: risk the formula can&apos;t see</CardTitle>
+          <CardDescription>Flags from this month&apos;s payments, loan status and savings, on {d.active_accounts.toLocaleString()} active accounts</CardDescription></div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-[17px] leading-relaxed">
+          <span className="tabular font-display text-[34px] font-bold leading-none text-tangerine">{d.counts.green_under_formula}</span>{" "}
+          of the {d.total} flagged accounts show <b>no shortfall</b> under the README runway formula, yet are short this month, behind on a loan or holding under one month of savings.
+        </p>
+        <ul className="divide-y-[0.5px] divide-line overflow-hidden rounded-[14px] bg-cream">
+          {d.items.map((it) => (
+            <li key={it.account_id}>
+              <Link href={`/judge?account=${it.account_id}`} className="flex min-h-12 items-center gap-3 px-4 py-2 hover:bg-peach">
+                <span className="tabular w-16 font-semibold">#{it.account_id}</span>
+                <span className="flex flex-1 flex-wrap gap-1">{it.flags.map((f) => <Badge key={f} tone={f === "thin" ? "warn" : "bad"}>{FLAG_LABEL[f]}</Badge>)}</span>
+                <span className="tabular hidden text-[13px] text-ink-2 sm:inline">{money(it.left_after_fixed)} after fixed</span>
+                <ChevronRight className="size-4 text-[#c7c7cc]" aria-hidden />
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-[12px] text-ink-3">{d.use}</p>
+          <Link href="/accounts" className="flex min-h-11 items-center gap-1 text-[15px] font-medium text-tangerine">See all {d.total}<ArrowRight className="size-4" aria-hidden /></Link>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 interface Insights {
   available: boolean; reason?: string; n_accounts: number; compute_seconds: number; computed_at: string;
@@ -40,13 +83,16 @@ function HBar({ data, x, y, name, fmt, height }: { data: Record<string, unknown>
 }
 
 export default function InsightsPage() {
-  const q = useQuery({ queryKey: ["insights"], queryFn: () => api<Insights>("/insights"), staleTime: Infinity });
+  const allowed = useRoleGate("staff");
+  const q = useQuery({ queryKey: ["insights"], queryFn: () => api<Insights>("/insights"), staleTime: Infinity, enabled: allowed });
   const snow = useMutation({ mutationFn: () => api<{ available: boolean; text?: string; reason?: string; engine?: string; model?: string }>("/insights/snowflake-review", { method: "POST" }) });
   const d = q.data;
   const fq = d?.runway_by_fixed_burden.map((r) => ({ ...r, err: r.ci95[0] !== null && r.ci95[1] !== null ? [r.median_runway_ei55 - r.ci95[0]!, r.ci95[1]! - r.median_runway_ei55] : [0, 0] })) ?? [];
+  if (!allowed) return null;
   return (
     <div className="space-y-6">
       <SectionTitle title="Portfolio Findings" subtitle="Computed live from all accounts in the Tangerine dataset. Associations, not causes — sample sizes shown." />
+      <AttentionPreview />
       {q.error && <ErrorState error={q.error} retry={q.refetch} />}
       {q.isLoading && <Skeleton className="h-96" />}
       {d && !d.available && <p className="text-sm text-ink-2">{d.reason}</p>}

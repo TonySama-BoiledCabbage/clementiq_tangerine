@@ -26,8 +26,22 @@ def test_customer_isolated_to_own_account(client, customer_1001):
     assert [i["account_id"] for i in lst["items"]] == [1001]
 
 
-def test_admin_only_import(client, judge):
+def test_admin_only_import(client, judge, customer_1001):
     assert client.post("/api/admin/imports/run", headers=judge).status_code == 403
+    assert client.get("/api/admin/imports", headers=judge).status_code == 403
+    assert client.get("/api/admin/imports", headers=customer_1001).status_code == 403
+
+
+def test_obligations(client, judge, customer_1001):
+    r = client.get("/api/accounts/1001/obligations", headers=judge)
+    assert r.status_code == 200
+    d = r.json()
+    assert d["status"] in {"covered", "tight", "short", "unknown"}
+    assert abs(d["fixed_total"] - sum(x["amount"] for x in d["fixed_payments"])) < 0.01
+    if d["balance"] is not None:
+        assert abs(d["left_after_fixed"] - (d["balance"] - d["fixed_total"])) < 0.01
+    assert len(d["notes"]) == 2
+    assert client.get("/api/accounts/1002/obligations", headers=customer_1001).status_code == 403
 
 
 def test_summary_flow(client, judge):
@@ -140,3 +154,28 @@ def test_investments_portfolio_scenario(client, customer_1001):
 def test_insights(client, judge):
     j = client.get("/api/insights", headers=judge).json()
     assert j["available"] and j["n_accounts"] == 3 and j["findings"]
+
+
+def test_needs_attention(client, judge, customer_1001):
+    assert client.get("/api/insights/needs-attention", headers=customer_1001).status_code == 403
+    assert client.get("/api/insights", headers=customer_1001).status_code == 403
+    d = client.get("/api/insights/needs-attention", headers=judge).json()
+    assert d["total"] == len(d["items"]) <= d["active_accounts"]
+    sev = {"short": 0, "behind": 1, "thin": 2}
+    keys = [(min(sev[f] for f in it["flags"]), it["left_after_fixed"]) for it in d["items"]]
+    assert keys == sorted(keys)
+    for it in d["items"]:
+        assert it["flags"]
+        if "short" in it["flags"]:
+            assert it["left_after_fixed"] < 0
+        if "thin" in it["flags"]:
+            assert it["B"] < it["S"]
+    assert "not credit decisions" in d["use"]
+    t = client.get("/api/insights/needs-attention?flag=thin", headers=judge).json()
+    assert t["matching"] == d["counts"]["thin"] and all("thin" in it["flags"] for it in t["items"])
+    assert client.get("/api/insights/needs-attention?flag=bogus", headers=judge).status_code == 422
+
+
+def test_mortgage_renewal_preset(client, judge):
+    ids = [p["id"] for p in client.get("/api/shocks/presets", headers=judge).json()["presets"]]
+    assert "mortgage_renewal" in ids

@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
   turbopack: { root: path.join(__dirname, "../..") },
   transpilePackages: ["@clementiq/shared-types"],
   poweredByHeader: false,
+  // The dev-mode "N" badge sits bottom-left and would cover the phone tab bar during a live demo.
+  devIndicators: false,
   // Same-origin API: the browser calls /api/*, Next proxies to FastAPI (no CORS, no exposed backend URL).
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${API_TARGET}/api/:path*` }];

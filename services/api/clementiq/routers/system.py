@@ -78,7 +78,7 @@ def sources(p: Principal = Depends(current_principal), db: Session = Depends(get
 
 
 @router.get("/admin/imports")
-def import_status(p: Principal = Depends(current_principal), db: Session = Depends(get_db)):
+def import_status(p: Principal = Depends(require_admin), db: Session = Depends(get_db)):
     from ..ingestion.schemas import SCHEMAS
     out = []
     for sch in SCHEMAS:

@@ -79,14 +79,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Financial Dashboard" subtitle="Know the customer: income, bills, fixed costs, buffer and runway" computedAt={s?.computed_at} />
+      <PageHeader title="Customer Profile" subtitle="Know the customer: income, bills, fixed costs, buffer and runway" computedAt={s?.computed_at} />
       {!accountId && <NeedAccount />}
       {error && <ErrorState error={error} retry={refetch} />}
       {isLoading && <Skeleton className="h-96" />}
       {s && (
         <>
           {s.warnings.length > 0 && <div className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200"><AlertTriangle className="size-4 shrink-0" />{s.warnings.join(" · ")}</div>}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+          <div className="grid gap-4 *:min-w-0 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
             <FinancialMetricCard label="Income (I)" value={money(s.judging.I)} icon={Banknote} tone="good" calc={calc("income_I")} />
             <FinancialMetricCard label="Spending (S)" value={money(s.judging.S)} icon={ShoppingCart} calc={calc("spending_S")} />
             <FinancialMetricCard label="Fixed costs (F)" value={money(s.judging.F)} icon={Receipt} tone="violet" calc={calc("fixed_costs_F")} sub="Bills + insurance + loan payments" />
@@ -105,7 +105,7 @@ export default function DashboardPage() {
             <CardContent><IncomeExpenseChart series={s.series} /></CardContent>
           </Card>
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-4 *:min-w-0 xl:grid-cols-2">
             <Card>
               <CardHeader><div><CardTitle>Where typical money goes</CardTitle><CardDescription>Median per month by labelled category</CardDescription></div></CardHeader>
               <CardContent>
@@ -143,7 +143,7 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
+          <div className="grid gap-4 *:min-w-0 xl:grid-cols-2">
             <Card>
               <CardHeader><div><CardTitle>Financial risk indicators</CardTitle><CardDescription>Detected from this account’s own history (robust z-scores)</CardDescription></div></CardHeader>
               <CardContent className="space-y-3">

@@ -31,7 +31,7 @@ export function ShockParameterSlider({ label, value, min, max, step = 1, unit, o
         <label className="text-xs font-medium text-ink-2">{label}</label>
         <input type="number" value={value} min={min} max={max} step={step} aria-label={`${label} value`}
           onChange={(e) => { const v = Number(e.target.value); if (!Number.isNaN(v)) onChange(Math.max(min, Math.min(max, v))); }}
-          className="tabular h-7 w-24 rounded-lg border border-line bg-surface px-2 text-right text-xs" />
+          className="tabular h-8 w-24 rounded-[8px] border-0 bg-surface px-2 text-right text-[13px]" />
       </div>
       <Slider value={[value]} min={min} max={max} step={step} onValueChange={([v]) => onChange(v)} aria-label={label} />
       <p className="text-[10px] text-ink-3">{shown}{hint ? ` · ${hint}` : ""}</p>
@@ -52,15 +52,15 @@ export function ShockScenarioSelector({ components, onChange, types, presets, on
         <p className="mb-2 text-xs font-semibold text-ink-2">{presetsLabel}</p>
         <div className="flex flex-wrap gap-1.5">
           {presets.filter((p) => mode === "extended" || p.judging).map((p) => (
-            <button key={p.id} onClick={() => onPreset(p)} className="min-h-8 cursor-pointer rounded-full border border-line-strong px-3 py-1 text-xs font-medium hover:bg-peach">{p.name}</button>
+            <button key={p.id} onClick={() => onPreset(p)} className="min-h-9 cursor-pointer rounded-full bg-peach px-3.5 py-1 text-[13px] font-medium text-ink hover:brightness-95">{p.name}</button>
           ))}
         </div>
       </div>}
       {components.map((c, i) => (
-        <div key={i} className="rounded-2xl border border-line bg-cream p-3">
+        <div key={i} className="rounded-[14px] bg-cream p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
             <select value={c.type} aria-label="Shock type" onChange={(e) => upd(i, { ...SHOCK_DEFAULTS[e.target.value as ShockType], type: e.target.value as ShockType } as ShockComponent)}
-              className="h-8 rounded-lg border border-line bg-surface px-2 text-xs font-semibold">
+              className="h-9 rounded-[10px] border-0 bg-surface px-2.5 text-[13px] font-semibold">
               {Object.entries(types).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
             <button onClick={() => remove(i)} disabled={components.length === 1} aria-label="Remove shock" className="cursor-pointer rounded-lg p-1.5 text-ink-3 hover:bg-peach hover:text-bad disabled:opacity-30"><Trash2 className="size-4" /></button>
@@ -106,7 +106,7 @@ export function ShockScenarioSelector({ components, onChange, types, presets, on
         </div>
       ))}
       {components.length < 12 && (
-        <button onClick={() => onChange([...components, SHOCK_DEFAULTS.bill_inflation])} className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-2xl border border-dashed border-line py-2.5 text-xs font-semibold text-ink-2 hover:border-tangerine hover:text-tangerine">
+        <button onClick={() => onChange([...components, SHOCK_DEFAULTS.bill_inflation])} className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-[14px] bg-peach text-[15px] font-medium text-tangerine hover:brightness-95">
           <Plus className="size-4" /> Combine another shock
         </button>
       )}
@@ -124,12 +124,12 @@ export function FinancialImpactSummary({ sim }: { sim: SimResult }) {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-line p-3 text-center"><p className="text-xs font-semibold text-ink-2">Baseline</p><FinancialRunwayGauge runway={sim.baseline.runway} size={170} /></div>
-        <div className="rounded-2xl border border-tangerine/40 bg-peach/40 p-3 text-center"><p className="text-xs font-semibold text-tangerine">With shock</p><FinancialRunwayGauge runway={sim.scenario.runway} size={170} /></div>
+        <div className="rounded-[14px] bg-cream p-3 text-center"><p className="text-xs font-semibold text-ink-2">Baseline</p><FinancialRunwayGauge runway={sim.baseline.runway} size={170} /></div>
+        <div className="rounded-[14px] bg-[#e5f0fd] p-3 text-center"><p className="text-xs font-semibold text-tangerine">With shock</p><FinancialRunwayGauge runway={sim.scenario.runway} size={170} /></div>
       </div>
       {sim.verdict && (
-        <div className={cn("rounded-2xl p-3 text-sm font-semibold", sim.verdict.survives ? "bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-200" : "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200")}>
-          {sim.verdict.survives ? "✓ " : "▲ "}{sim.verdict.text}
+        <div className={cn("rounded-2xl p-3 text-sm font-semibold", sim.verdict.survives ? "bg-good-bg text-good" : "bg-bad-bg text-bad")}>
+          {sim.verdict.text}
           {!sim.verdict.survives && sim.verdict.shortfall_over_period > 0 && <span className="block text-xs font-normal">Additional funds needed to last the full period: {money(sim.verdict.shortfall_over_period)}</span>}
         </div>
       )}

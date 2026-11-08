@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "@/lib/store";
 import { Skeleton } from "@/components/ui/misc";
 import { AppSidebar } from "./AppSidebar";
+import { MobileTabBar } from "./MobileTabBar";
 import { TopNavigation } from "./TopNavigation";
 
 /** Authenticated application frame: header, left nav, main content (the AI side panel is not shown in the redesign). */
@@ -37,10 +38,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <TopNavigation />
       <div className="flex">
         <AppSidebar />
-        <main id="main" className="mx-auto min-w-0 max-w-[1320px] flex-1 px-4 py-6 sm:px-6 lg:px-8">
+        <main id="main" className="mx-auto min-w-0 max-w-[1320px] flex-1 px-4 pt-6 pb-[calc(62px+max(env(safe-area-inset-bottom),12px)+28px)] sm:px-6 lg:px-8 lg:pb-8">
           <Suspense fallback={<Skeleton className="h-96" />}>{children}</Suspense>
         </main>
       </div>
+      <MobileTabBar />
     </div>
   );
 }

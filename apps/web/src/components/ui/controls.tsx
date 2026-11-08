@@ -11,18 +11,18 @@ import { cn } from "@/lib/utils";
 export function Slider({ className, ...props }: React.ComponentProps<typeof SliderPrimitive.Root>) {
   return (
     <SliderPrimitive.Root className={cn("relative flex w-full touch-none select-none items-center py-2", className)} {...props}>
-      <SliderPrimitive.Track className="relative h-1.5 w-full grow overflow-hidden rounded-full bg-peach">
+      <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-[#e3e3e8]">
         <SliderPrimitive.Range className="absolute h-full brand-gradient" />
       </SliderPrimitive.Track>
       <SliderPrimitive.Thumb aria-label={props["aria-label"]}
-        className="block h-5 w-5 cursor-grab rounded-full border-2 border-tangerine bg-white shadow transition hover:scale-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tangerine/30" />
+        className="block h-7 w-7 cursor-grab rounded-full bg-white shadow-[0_0.5px_4px_rgb(0_0_0/0.12),0_6px_13px_rgb(0_0_0/0.12)] transition active:scale-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-tangerine/30" />
     </SliderPrimitive.Root>
   );
 }
 
 export function Switch({ className, ...p }: React.ComponentProps<typeof SwitchPrimitive.Root>) {
   return (
-    <SwitchPrimitive.Root className={cn("inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition data-[state=checked]:bg-tangerine data-[state=unchecked]:bg-slate-300 dark:data-[state=unchecked]:bg-slate-600", className)} {...p}>
+    <SwitchPrimitive.Root className={cn("inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition data-[state=checked]:bg-good data-[state=unchecked]:bg-[#e9e9ea]", className)} {...p}>
       <SwitchPrimitive.Thumb className="block h-5 w-5 translate-x-0.5 rounded-full bg-white shadow transition data-[state=checked]:translate-x-[22px]" />
     </SwitchPrimitive.Root>
   );
@@ -31,10 +31,10 @@ export function Switch({ className, ...p }: React.ComponentProps<typeof SwitchPr
 export const Tabs = TabsPrimitive.Root;
 export const TabsContent = TabsPrimitive.Content;
 export function TabsList({ className, ...p }: React.ComponentProps<typeof TabsPrimitive.List>) {
-  return <TabsPrimitive.List className={cn("inline-flex flex-wrap items-center gap-1 rounded-xl bg-peach p-1", className)} {...p} />;
+  return <TabsPrimitive.List className={cn("inline-flex flex-wrap items-center gap-0.5 rounded-[9px] bg-[#eeeef0] p-0.5", className)} {...p} />;
 }
 export function TabsTrigger({ className, ...p }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
-  return <TabsPrimitive.Trigger className={cn("cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold text-ink-2 transition data-[state=active]:bg-surface data-[state=active]:text-tangerine data-[state=active]:shadow-sm", className)} {...p} />;
+  return <TabsPrimitive.Trigger className={cn("cursor-pointer rounded-[7px] px-3 py-1.5 text-[13px] font-medium text-ink transition data-[state=active]:bg-surface data-[state=active]:font-semibold data-[state=active]:shadow-[0_3px_8px_rgb(0_0_0/0.12),0_3px_1px_rgb(0_0_0/0.04)]", className)} {...p} />;
 }
 
 export const DropdownMenu = DM.Root;
@@ -42,7 +42,7 @@ export const DropdownMenuTrigger = DM.Trigger;
 export function DropdownMenuContent({ className, ...p }: React.ComponentProps<typeof DM.Content>) {
   return (
     <DM.Portal>
-      <DM.Content sideOffset={8} align="end" className={cn("z-50 min-w-56 rounded-2xl border border-line bg-surface p-1.5 text-ink shadow-xl", className)} {...p} />
+      <DM.Content sideOffset={8} align="end" className={cn("glass z-50 min-w-56 rounded-[14px] p-1.5 text-ink", className)} {...p} />
     </DM.Portal>
   );
 }
