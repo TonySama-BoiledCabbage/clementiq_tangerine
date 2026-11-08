@@ -20,13 +20,15 @@ export function AIInsightCard({ title = "Explain with Clement Gemini", endpoint,
 }) {
   const m = useMutation({ mutationFn: () => api<AIResult<ScenarioExplanation & PlanExplanation> & { explanation?: AIResult<ScenarioExplanation & PlanExplanation> }>(endpoint, { method: "POST", json: body }) });
   const res = m.data?.explanation ?? m.data;
+  const template = res?.engine === "clement-core-template";
   return (
     <Card className="overflow-hidden">
       <div className="flex items-center justify-between gap-2 border-b border-line bg-gradient-to-r from-violet-50 to-peach px-4 py-3 dark:from-violet-950/40">
         <div className="flex items-center gap-2"><Sparkles className="size-4 text-invest" /><p className="text-sm font-semibold">{title}</p></div>
-        <Button size="sm" variant="outline" onClick={() => m.mutate()} disabled={m.isPending || !!res}>{m.isPending ? <Spinner /> : null}{res ? "Explanation ready" : "Explain"}</Button>
+        <Button size="sm" variant="outline" onClick={() => m.mutate()} disabled={m.isPending || (!!res && !template)}>{m.isPending ? <Spinner /> : null}{m.isPending ? "Explaining…" : template ? "Retry AI" : res ? "Explanation ready" : "Explain"}</Button>
       </div>
       <div className="space-y-3 p-4 text-sm">
+        {m.isPending && <p role="status" className="text-xs text-ink-2">Preparing your explanation. If AI takes too long, a standard explanation will appear.</p>}
         {m.isError && <ErrorState error={m.error} retry={() => m.mutate()} />}
         {!res && !m.isPending && !m.isError && <p className="text-xs text-ink-2">Get a plain-language explanation of these results. Gemini only sees rounded summaries — never your account ID or personal details.</p>}
         {res && (

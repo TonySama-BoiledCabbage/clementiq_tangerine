@@ -44,13 +44,13 @@ class Settings(BaseSettings):
 
     # --- Gemini ---
     gemini_api_key: str | None = Field(None, alias="GEMINI_API_KEY")
-    gemini_model: str = Field("gemini-flash-latest", alias="GEMINI_MODEL")
+    gemini_model: str = Field("gemini-3.5-flash-lite", alias="GEMINI_MODEL")
     gemini_grounding: bool = Field(False, alias="GEMINI_GROUNDING")
     ai_max_output_tokens: int = Field(2048, ge=256, le=8192, alias="AI_MAX_OUTPUT_TOKENS")
     ai_chat_messages: int = Field(8, ge=1, le=20, alias="AI_CHAT_MESSAGES")
     ai_max_prompt_chars: int = Field(16000, ge=2000, le=64000, alias="AI_MAX_PROMPT_CHARS")
     ai_tool_rounds: int = Field(3, ge=1, le=5, alias="AI_TOOL_ROUNDS")
-    gemini_timeout_s: float = Field(30.0, alias="GEMINI_TIMEOUT_S")
+    gemini_timeout_s: float = Field(30.0, ge=1, le=120, alias="GEMINI_TIMEOUT_S")
 
     # --- Snowflake Cortex (optional) ---
     snowflake_account_url: str | None = Field(None, alias="SNOWFLAKE_ACCOUNT_URL")

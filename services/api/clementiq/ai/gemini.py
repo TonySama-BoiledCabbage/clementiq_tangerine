@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+from time import monotonic
 from typing import Any, TypeVar
 
 import httpx
@@ -42,13 +43,19 @@ class GeminiUnavailable(RuntimeError):
     pass
 
 
-def _post(body: dict[str, Any]) -> dict[str, Any]:
+def _post(body: dict[str, Any], *, timeout_s: float | None = None) -> dict[str, Any]:
     s = get_settings()
     if not s.gemini_enabled:
         raise GeminiUnavailable("GEMINI_API_KEY not configured")
+    remaining = s.gemini_timeout_s if timeout_s is None else min(timeout_s, s.gemini_timeout_s)
+    if remaining <= 0:
+        raise GeminiUnavailable("Gemini response time budget exceeded")
     try:
-        resp = httpx.post(API.format(model=s.gemini_model), json=body, timeout=s.gemini_timeout_s,
+        resp = httpx.post(API.format(model=s.gemini_model), json=body,
+                          timeout=httpx.Timeout(remaining, connect=min(5.0, remaining)),
                           headers={"x-goog-api-key": s.gemini_api_key or "", "Content-Type": "application/json"})
+    except httpx.TimeoutException as exc:
+        raise GeminiUnavailable("Gemini took too long; standard explanation used") from exc
     except httpx.HTTPError as exc:
         raise GeminiUnavailable(f"network error: {exc.__class__.__name__}") from exc
     if resp.status_code != 200:
@@ -112,6 +119,7 @@ def chat_with_tools(messages: list[dict[str, Any]], tools: list[dict[str, Any]],
     contents = [{"role": m["role"], "parts": [{"text": m["content"]}]} for m in messages]
     calls: list[dict[str, Any]] = []
     usage: dict[str, int] = {}
+    deadline = monotonic() + get_settings().gemini_timeout_s
     for _ in range(max_rounds):
         body = {
             "systemInstruction": {"parts": [{"text": SYSTEM_GUARDRAILS + CHAT_EXTRA}]},
@@ -120,7 +128,7 @@ def chat_with_tools(messages: list[dict[str, Any]], tools: list[dict[str, Any]],
             "toolConfig": {"functionCallingConfig": {"mode": "AUTO"}},
             "generationConfig": {"maxOutputTokens": get_settings().ai_max_output_tokens, "temperature": 0.3},
         }
-        data = _post(body)
+        data = _post(body, timeout_s=deadline - monotonic())
         for key, value in data.get("usageMetadata", {}).items():
             if isinstance(value, int):
                 usage[key] = usage.get(key, 0) + value
@@ -130,13 +138,18 @@ def chat_with_tools(messages: list[dict[str, Any]], tools: list[dict[str, Any]],
             raise GeminiUnavailable("empty chat response") from exc
         fcs = [p["functionCall"] for p in content.get("parts", []) if "functionCall" in p]
         if not fcs:
-            return {"text": "".join(p.get("text", "") for p in content.get("parts", []) if not p.get("thought")),
+            text = "".join(p.get("text", "") for p in content.get("parts", []) if not p.get("thought"))
+            if not text.strip():
+                raise GeminiUnavailable("Gemini returned no answer")
+            return {"text": text,
                     "tool_calls": calls, "engine": "clement-gemini", "model": get_settings().gemini_model, "usage": usage}
         contents.append(content)  # keep thought signatures intact
         responses = []
         if len(fcs) > 5:
             raise GeminiUnavailable("too many parallel tool calls")
         for fc in fcs:
+            if monotonic() >= deadline:
+                raise GeminiUnavailable("Gemini response time budget exceeded")
             name, args = fc.get("name"), fc.get("args", {}) or {}
             result = executor(name, args)
             calls.append({"name": name, "args": args, "ok": "error" not in result})
