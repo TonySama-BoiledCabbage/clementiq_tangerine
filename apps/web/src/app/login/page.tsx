@@ -16,6 +16,7 @@ const schema = z.object({
   role: z.enum(["judge", "customer", "admin"]),
   access_code: z.string().min(1, "Access code required"),
   account_id: z.string().regex(/^\d*$/, "Digits only").optional(),
+  display_name: z.string().max(40).regex(/^[\p{L}\p{N} .'-]*$/u, "Letters, numbers and spaces only").optional(),
 }).refine((v) => v.role !== "customer" || !!v.account_id, { path: ["account_id"], message: "Customer sign-in needs an account_id" });
 type Form = z.infer<typeof schema>;
 
@@ -31,7 +32,7 @@ function LoginForm() {
   const setSession = useSession((s) => s.setSession);
   const [err, setErr] = useState<string | null>(null);
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<Form>({
-    resolver: zodResolver(schema), defaultValues: { role: "judge", access_code: "", account_id: "" },
+    resolver: zodResolver(schema), defaultValues: { role: "judge", access_code: "", account_id: "", display_name: "" },
   });
   const role = watch("role");
   const showCodes = process.env.NEXT_PUBLIC_SHOW_DEMO_CODES === "true";
@@ -40,7 +41,8 @@ function LoginForm() {
     setErr(null);
     try {
       const r = await api<{ access_token: string; role: Role; sub: string; account_id: number | null; expires_at: string }>(
-        "/auth/demo-login", { method: "POST", json: { role: v.role, access_code: v.access_code.trim(), account_id: v.account_id ? Number(v.account_id) : null } });
+        "/auth/demo-login", { method: "POST", json: { role: v.role, access_code: v.access_code.trim(), account_id: v.account_id ? Number(v.account_id) : null,
+                                               display_name: v.display_name?.trim() ? v.display_name.trim().toLowerCase().replace(/\s+/g, "-") : null } });
       setSession({ token: r.access_token, role: r.role, sub: r.sub, account_id: r.account_id, expires_at: r.expires_at });
       router.replace(next.startsWith("/") ? next : "/");
     } catch (e) {
@@ -65,6 +67,14 @@ function LoginForm() {
           <Label htmlFor="acc">account_id</Label>
           <Input id="acc" inputMode="numeric" placeholder="e.g. 20111" {...register("account_id")} />
           {errors.account_id && <p className="mt-1 text-xs text-bad">{errors.account_id.message}</p>}
+        </div>
+      )}
+      {role !== "customer" && (
+        <div>
+          <Label htmlFor="dname">Your name (optional)</Label>
+          <Input id="dname" placeholder="e.g. Nadia" autoComplete="given-name" {...register("display_name")} />
+          <p className="mt-1 text-[11px] text-ink-3">Keeps your dashboard layout, theme and avatar separate from other people using the same access code.</p>
+          {errors.display_name && <p className="mt-1 text-xs text-bad">{errors.display_name.message}</p>}
         </div>
       )}
       <div>

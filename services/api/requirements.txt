@@ -13,3 +13,4 @@ PyJWT==2.15.1
 base58==2.1.1
 psycopg[binary]==3.3.8
 tzdata==2026.6
+pillow==13.0.0

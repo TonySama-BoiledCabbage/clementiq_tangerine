@@ -155,6 +155,26 @@ def market_candidates(db: Session, owner: str) -> list[dict[str, Any]]:
     return out
 
 
+def reminder_candidates(db: Session, owner: str, account_id: int) -> list[dict[str, Any]]:
+    """Gentle reminder when the user has not saved a stress test for this account in 30 days."""
+    now = datetime.now(timezone.utc)
+    last = db.execute(select(func.max(models.SavedScenario.created_at)).where(
+        models.SavedScenario.owner == owner, models.SavedScenario.account_id == account_id)).scalar()
+    if last is not None and last.tzinfo is None:
+        last = last.replace(tzinfo=timezone.utc)
+    if last is not None and now - last < timedelta(days=30):
+        return []
+    period = now.strftime("%Y-%m")
+    return [_candidate(
+        dedup_key=f"{owner}:{account_id}:shock-reminder:{period}", category="reminders", severity="low",
+        title="Time for a quick resilience check-up", source="ClementIQ reminder",
+        relevance=("You haven't saved a stress test for this account in the last 30 days." if last
+                   else "You haven't saved a stress test for this account yet."),
+        relevance_score=45, confidence="reminder",
+        suggested_action="Run the EI 55% preset in the Shock Simulator and save it to track changes over time.",
+        simulation_link=f"/simulator?account={account_id}&preset=ei55_6m")]
+
+
 def _in_quiet_hours(prefs: dict[str, Any], now: datetime) -> bool:
     qh = prefs["alerts"]["quiet_hours"]
     if not qh.get("enabled"):
@@ -193,7 +213,10 @@ def generate_alerts(db: Session, owner: str, account_id: int, explain: int = 2) 
     if not ap["enabled"]:
         return {"created": 0, "suppressed": {"disabled": 1}}
     cands = (financial_health_candidates(db, owner, account_id, prefs) + event_candidates(db, owner, account_id, prefs)
-             + market_candidates(db, owner))
+             + market_candidates(db, owner) + reminder_candidates(db, owner, account_id))
+    # AI explanations on alerts are a separate, user-controlled notification type.
+    if not (ap.get("ai_explanations", True) and prefs["privacy"].get("personalized_ai", True)):
+        explain = 0
     today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     sent_today = db.execute(select(func.count()).select_from(models.Alert).where(
         models.Alert.owner == owner, models.Alert.created_at >= today)).scalar() or 0

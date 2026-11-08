@@ -22,6 +22,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     String,
     Text,
     UniqueConstraint,
@@ -402,6 +403,24 @@ class DataSourceStatus(Base):
     last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_error: Mapped[str | None] = mapped_column(Text)
     records: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class UserMedia(Base):
+    """Profile photo and generated orchard avatar per user (re-encoded, EXIF stripped).
+    Served only to the owning, authenticated user."""
+
+    __tablename__ = "user_media"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    owner: Mapped[str] = mapped_column(String(64), index=True)
+    kind: Mapped[str] = mapped_column(String(16))  # photo | avatar
+    mime: Mapped[str] = mapped_column(String(32))
+    data: Mapped[bytes] = mapped_column(LargeBinary)
+    width: Mapped[int] = mapped_column(Integer)
+    height: Mapped[int] = mapped_column(Integer)
+    sha256: Mapped[str] = mapped_column(String(64))
+    source: Mapped[str] = mapped_column(String(64))  # upload | gemini:<model>
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    __table_args__ = (UniqueConstraint("owner", "kind", name="uq_user_media_owner_kind"),)
 
 
 class CountryGeo(Base):

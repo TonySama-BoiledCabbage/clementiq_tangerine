@@ -7,7 +7,7 @@ from typing import Any
 
 import pandas as pd
 from fastapi import HTTPException
-from sqlalchemy import func, select, text
+from sqlalchemy import String, case, func, select, text
 from sqlalchemy.orm import Session
 
 from . import models
@@ -88,10 +88,44 @@ def list_accounts(db: Session, q: str | None, limit: int, offset: int, sort: str
             "items": [dict(r._mapping) for r in rows]}
 
 
+def search_accounts(db: Session, q: str, limit: int, offset: int) -> dict[str, Any]:
+    """Search the whole authorized dataset by account_id: exact match first, then prefix, then
+    substring matches. Paginated; returns the true total so the UI can offer "load more"."""
+    B = models.AccountBaseline
+    idtext = func.cast(models.Account.account_id, String)
+    cols = (models.Account.account_id, B.income_I, B.spending_S, B.buffer_B, B.resilience_score, B.runway_ei55, B.months_of_data)
+    stmt = select(*cols).join(B, B.account_id == models.Account.account_id, isouter=True)
+    count = select(func.count()).select_from(models.Account)
+    exact_id = int(q) if q.isdigit() and len(q) <= 9 else None
+    if q:
+        cond = idtext.like(f"%{q}%")
+        stmt, count = stmt.where(cond), count.where(cond)
+        rank = case((models.Account.account_id == (exact_id if exact_id is not None else -1), 0),
+                    (idtext.like(f"{q}%"), 1), else_=2)
+        stmt = stmt.order_by(rank, models.Account.account_id)
+    else:
+        stmt = stmt.order_by(models.Account.account_id)
+    rows = db.execute(stmt.limit(limit).offset(offset)).all()
+    items = []
+    for r in rows:
+        d = dict(r._mapping)
+        aid = str(d["account_id"])
+        d["match"] = "exact" if q and aid == q else "prefix" if q and aid.startswith(q) else "contains" if q else "all"
+        items.append(d)
+    exact_exists = exact_id is not None and db.get(models.Account, exact_id) is not None
+    return {"query": q, "total": db.execute(count).scalar() or 0, "limit": limit, "offset": offset,
+            "exact_match": exact_exists, "items": items}
+
+
 def get_prefs(db: Session, owner: str) -> dict[str, Any]:
     from .prefs import DEFAULT_PREFS, merge_prefs
     row = db.get(models.UserPreference, owner)
     return merge_prefs(DEFAULT_PREFS, row.data if row else {})
+
+
+def ai_allowed(db: Session, owner: str) -> bool:
+    """False when the user turned off personalized AI guidance (no customer data goes to Gemini)."""
+    return bool(get_prefs(db, owner)["privacy"].get("personalized_ai", True))
 
 
 def audit(db: Session, actor: str, action: str, resource: str | None = None, **detail: Any) -> None:

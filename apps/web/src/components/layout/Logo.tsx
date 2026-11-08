@@ -18,7 +18,7 @@ export function Logo({ light = false }: { light?: boolean }) {
         <div className={`text-lg font-extrabold tracking-tight ${light ? "text-white" : "text-ink"}`}>
           Clement<span className={light ? "text-white/85" : "text-tangerine"}>IQ</span>
         </div>
-        <div className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${light ? "text-white/80" : "text-ink-2"}`}>AI Financial Resilience</div>
+        <div className={`hidden whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.14em] min-[420px]:block ${light ? "text-white/80" : "text-ink-2"}`}>AI Financial Resilience</div>
       </div>
     </div>
   );

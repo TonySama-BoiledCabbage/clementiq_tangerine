@@ -23,6 +23,23 @@ export function useAccount(): number | null {
   return role === "customer" ? bound : accountId;
 }
 
+export interface Me {
+  sub: string; role: "judge" | "customer" | "admin"; account_id: number | null; read_only: boolean;
+  entitlements: { judge_demo: boolean; account_search: boolean; data_import_view: boolean; data_import_run: boolean };
+  features_allowed: string[];
+}
+
+/** Identity and entitlements as verified by the server from the signed token. Role-gated UI uses this,
+ *  never the role cached in browser storage (which a user could edit). */
+export function useMe() {
+  const token = useSession((s) => s.token);
+  return useQuery({ queryKey: ["me", token], queryFn: () => api<Me>("/auth/me"), enabled: !!token, staleTime: 5 * 60_000 });
+}
+
+export function useVerifiedRole(): Me["role"] | null {
+  return useMe().data?.role ?? null;
+}
+
 export function useSummary(accountId: number | null) {
   return useQuery({
     queryKey: ["summary", accountId],
@@ -118,9 +135,13 @@ export function useRefreshWorld() {
 export interface SettingsResponse {
   preferences: {
     alerts: { enabled: boolean; categories: Record<string, boolean>; min_severity: "low" | "medium" | "high"; relevance_threshold: number;
-              runway_threshold_months: number; max_per_day: number; quiet_hours: { enabled: boolean; start: string; end: string; timezone: string } };
+              runway_threshold_months: number; max_per_day: number; ai_explanations?: boolean; quiet_hours: { enabled: boolean; start: string; end: string; timezone: string } };
     channels: { in_app: boolean; email: { opt_in: boolean; address: string | null }; browser_push: { opt_in: boolean } };
     interests: string[]; display: { reduced_motion: boolean; enable_3d: boolean; currency: string }; watched_accounts: number[];
+    dashboard: import("./features").DashboardPrefs;
+    appearance: Appearance;
+    avatar: { generation_consent: boolean; consent_at: string | null; personalized_enabled: boolean; character?: "default" | "photo" | "generated" };
+    privacy: { personalized_ai: boolean; optional_ai_insights: boolean };
   };
   integrations: Record<string, boolean | string>;
 }
@@ -128,6 +149,44 @@ export interface SettingsResponse {
 export function useSettings() {
   const token = useSession((s) => s.token);
   return useQuery({ queryKey: ["settings"], queryFn: () => api<SettingsResponse>("/settings"), enabled: !!token, staleTime: 60_000 });
+}
+
+export interface Appearance {
+  theme: "light" | "dark" | "system"; orchard_enabled: boolean; money_trees: boolean; floating_coins: boolean;
+  animations: boolean; animation_intensity: "low" | "medium" | "high"; orchard_style: "illustrated" | "photo"; growth_visuals: boolean;
+}
+
+export const DEFAULT_APPEARANCE: Appearance = {
+  theme: "system", orchard_enabled: true, money_trees: true, floating_coins: true, animations: true,
+  animation_intensity: "medium", orchard_style: "illustrated", growth_visuals: true,
+};
+
+function deepMerge<T>(base: T, patch: unknown): T {
+  if (!patch || typeof patch !== "object" || Array.isArray(patch)) return (patch === undefined ? base : patch) as T;
+  const out: Record<string, unknown> = { ...(base as Record<string, unknown>) };
+  for (const [k, v] of Object.entries(patch as Record<string, unknown>)) {
+    if (v === undefined || v === null) continue;
+    const cur = out[k];
+    out[k] = v && typeof v === "object" && !Array.isArray(v) && cur && typeof cur === "object" && !Array.isArray(cur) ? deepMerge(cur, v) : v;
+  }
+  return out as T;
+}
+
+/** Optimistic preference updates: the UI changes instantly, then the server copy (per user) is saved.
+ *  On failure the previous preferences are restored. */
+export function useUpdatePrefs() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: Record<string, unknown>) => api<SettingsResponse>("/settings", { method: "PATCH", json: patch }),
+    onMutate: async (patch) => {
+      await qc.cancelQueries({ queryKey: ["settings"] });
+      const prev = qc.getQueryData<SettingsResponse>(["settings"]);
+      if (prev) qc.setQueryData<SettingsResponse>(["settings"], { ...prev, preferences: deepMerge(prev.preferences, patch) });
+      return { prev };
+    },
+    onError: (_e, _p, ctx) => { if (ctx?.prev) qc.setQueryData(["settings"], ctx.prev); },
+    onSuccess: (d) => qc.setQueryData(["settings"], (old: SettingsResponse | undefined) => ({ ...(old ?? d), preferences: d.preferences })),
+  });
 }
 
 export function useSaveSettings() {

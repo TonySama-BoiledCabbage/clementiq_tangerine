@@ -1,16 +1,22 @@
-"""User preference schema (alerts, quiet hours, interests, outbound channels)."""
+"""Per-user preference schema (one JSON document per authenticated subject in user_preferences).
+
+Sections: alerts, channels, interests, display, dashboard (feature visibility, favorites, order,
+density), appearance (theme, orchard visuals), avatar (photo-generation consent), privacy (AI use).
+Hiding a dashboard feature only changes visibility here; it never deletes data or stops services.
+"""
 from __future__ import annotations
 
 import copy
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints
 
 DEFAULT_PREFS: dict[str, Any] = {
     "alerts": {
         "enabled": True,
         "categories": {"financial_health": True, "global_events": True, "investments": True,
-                       "crypto": True, "loan_exposure": True, "savings_goals": True},
+                       "crypto": True, "loan_exposure": True, "savings_goals": True, "reminders": True},
+        "ai_explanations": True,
         "min_severity": "low",
         "relevance_threshold": 40,
         "runway_threshold_months": 3,
@@ -23,7 +29,18 @@ DEFAULT_PREFS: dict[str, Any] = {
     "allocation_overrides": {},
     "display": {"reduced_motion": False, "enable_3d": True, "currency": "CAD"},
     "watched_accounts": [],
+    # {} means "use each feature's registry default"; an explicit true/false always wins.
+    "dashboard": {"layout_density": "balanced", "features": {}, "favorites": [], "order": []},
+    "appearance": {"theme": "system", "orchard_enabled": True, "money_trees": True, "floating_coins": True,
+                   "animations": True, "animation_intensity": "medium", "orchard_style": "illustrated",
+                   "growth_visuals": True},
+    # character: which figure sits in the orchard — the default illustration, the user's own photo
+    # as a framed portrait (no AI), or a consented AI-generated character.
+    "avatar": {"generation_consent": False, "consent_at": None, "personalized_enabled": False, "character": "default"},
+    "privacy": {"personalized_ai": True, "optional_ai_insights": True},
 }
+
+FEATURE_ID = r"^[a-zA-Z][a-zA-Z0-9_]{1,40}$"
 
 
 class QuietHours(BaseModel):
@@ -41,6 +58,36 @@ class AlertPrefs(BaseModel):
     runway_threshold_months: float | None = Field(None, ge=0, le=120)
     max_per_day: int | None = Field(None, ge=0, le=50)
     quiet_hours: QuietHours | None = None
+    ai_explanations: bool | None = None
+
+
+class DashboardPrefs(BaseModel):
+    layout_density: Literal["minimal", "balanced", "compact"] | None = None
+    features: dict[Annotated[str, StringConstraints(pattern=FEATURE_ID)], bool] | None = Field(None, max_length=60)
+    favorites: list[Annotated[str, StringConstraints(pattern=FEATURE_ID)]] | None = Field(None, max_length=60)
+    order: list[Annotated[str, StringConstraints(pattern=FEATURE_ID)]] | None = Field(None, max_length=60)
+
+
+class AppearancePrefs(BaseModel):
+    theme: Literal["light", "dark", "system"] | None = None
+    orchard_enabled: bool | None = None
+    money_trees: bool | None = None
+    floating_coins: bool | None = None
+    animations: bool | None = None
+    animation_intensity: Literal["low", "medium", "high"] | None = None
+    orchard_style: Literal["illustrated", "photo"] | None = None
+    growth_visuals: bool | None = None
+
+
+class AvatarPrefs(BaseModel):
+    personalized_enabled: bool | None = None
+    character: Literal["default", "photo", "generated"] | None = None
+    # consent is changed only through /api/profile/avatar/consent (records a timestamp)
+
+
+class PrivacyPrefs(BaseModel):
+    personalized_ai: bool | None = None
+    optional_ai_insights: bool | None = None
 
 
 class PrefsPatch(BaseModel):
@@ -50,6 +97,10 @@ class PrefsPatch(BaseModel):
     allocation_overrides: dict[str, float] | None = None
     display: dict[str, Any] | None = None
     watched_accounts: list[int] | None = Field(None, max_length=50)
+    dashboard: DashboardPrefs | None = None
+    appearance: AppearancePrefs | None = None
+    avatar: AvatarPrefs | None = None
+    privacy: PrivacyPrefs | None = None
 
 
 def merge_prefs(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:

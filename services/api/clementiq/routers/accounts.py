@@ -9,14 +9,14 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .. import models
-from ..auth import Principal, authorize_account, current_principal
+from ..auth import Principal, authorize_account, current_principal, require_judge
 from ..core.analytics import detect_anomalies, forecast_balance, trends
 from ..core.metrics import baseline_calcs
 from ..core.provenance import envelope
 from ..core.resilience import resilience_score, score_history
 from ..core.runway import compute_runway
 from ..db import get_db
-from ..repository import account_profile, get_baseline, list_accounts, loan_records, monthly_frame, reference_date
+from ..repository import account_profile, get_baseline, list_accounts, loan_records, monthly_frame, reference_date, search_accounts
 
 router = APIRouter(prefix="/api/accounts", tags=["accounts"])
 
@@ -28,6 +28,17 @@ def accounts(q: str | None = Query(None, max_length=10, pattern=r"^\d*$"), limit
     if p.role == "customer":
         return list_accounts(db, str(p.account_id), 1, 0)
     return list_accounts(db, q, limit, offset, sort)
+
+
+@router.get("/search")
+def search(q: str = Query("", max_length=12), limit: int = Query(25, ge=1, le=100), offset: int = Query(0, ge=0),
+           p: Principal = Depends(require_judge), db: Session = Depends(get_db)):
+    """Judge account search across the whole authorized (challenge) dataset."""
+    term = "".join(ch for ch in q.strip() if ch.isdigit())
+    if q.strip() and not term:
+        return {"query": q, "total": 0, "limit": limit, "offset": offset, "exact_match": False, "items": [],
+                "message": "Account IDs are numbers — try digits only, e.g. 20111."}
+    return search_accounts(db, term, limit, offset)
 
 
 def _net_position(df: pd.DataFrame, loan) -> list[dict]:

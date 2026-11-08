@@ -1,134 +1,157 @@
 "use client";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Banknote, Landmark, PiggyBank, ShoppingCart, TrendingUp, Zap } from "lucide-react";
-import type { SimResult } from "@clementiq/shared-types";
-import { api } from "@/lib/api";
-import { money, pct, timeAgo } from "@/lib/format";
-import { useAccount, useEvents, useSummary } from "@/lib/hooks";
-import { Badge } from "@/components/ui/badge";
+import { Check, Gavel, Info, Lock, Move, Sprout } from "lucide-react";
+import { DEFAULT_DASHBOARD, homeFeatures, reorderedIds, toggledFavorites } from "@/lib/features";
+import { DECORATIVE_GROWTH, growthFromSummary } from "@/lib/growth";
+import { DEFAULT_APPEARANCE, useAccount, useMe, useSettings, useSummary, useUpdatePrefs } from "@/lib/hooks";
+import { useMediaUrl, useProfile } from "@/lib/profile";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ErrorState, Progress, Skeleton } from "@/components/ui/misc";
-import { NeedAccount, PageHeader } from "@/components/layout/PageKit";
-import { FinancialMetricCard } from "@/components/finance/FinancialMetricCard";
-import { NetWorthChart } from "@/components/finance/Charts";
-import { FinancialRunwayGauge, ResilienceScoreGauge } from "@/components/finance/Gauges";
-import { EngineBadge } from "@/components/finance/EngineBadge";
+import { Skeleton } from "@/components/ui/misc";
+import { OrchardScene } from "@/components/orchard/OrchardScene";
+import { FeatureGrid, type Density } from "@/components/home/FeatureCard";
+import { HomeTopBar } from "@/components/layout/AppChrome";
+import { AccountSearch } from "@/components/layout/CustomerSelector";
+import type { CharacterMode } from "@/components/orchard/OrchardCharacter";
 
 function greeting() {
   const h = new Date().getHours();
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
-export default function OverviewPage() {
-  const accountId = useAccount();
-  const { data: s, isLoading, error, refetch } = useSummary(accountId);
-  const events = useEvents();
-  const shock = useQuery({
-    queryKey: ["overview-shock", accountId],
-    queryFn: () => api<SimResult>("/shocks/simulate", { method: "POST", json: { account_id: accountId, components: [{ type: "job_loss", income_replacement_pct: 55, duration_months: 6 }] } }),
-    enabled: accountId != null,
-  });
-  const goal = useQuery({
-    queryKey: ["overview-goal", accountId],
-    queryFn: () => api<{ target: number; current_buffer: number; progress_pct: number; months_to_goal: number | null; recommended_monthly_contribution: number }>("/recovery/goal-plan", { method: "POST", json: { account_id: accountId } }),
-    enabled: accountId != null,
-  });
-  const portfolio = useQuery({ queryKey: ["portfolio"], queryFn: () => api<{ total_value: number; holdings: unknown[]; holding_kinds: string[]; allocation: { asset_class: string; weight: number }[] }>("/investments/portfolio") });
+const DENSITIES: { id: Density; label: string }[] = [{ id: "minimal", label: "Minimal" }, { id: "balanced", label: "Balanced" }, { id: "compact", label: "Compact" }];
 
-  const calc = (n: string) => s?.calculations.find((c) => c.name === n);
+/** Celebrates when the emergency-fund milestone (25/50/75/100%) rises since the last visit. */
+function useMilestoneCelebration(accountId: number | null, milestone: number, hasData: boolean) {
+  const [celebrate, setCelebrate] = useState<string | null>(null);
+  useEffect(() => {
+    if (!accountId || !hasData) return;
+    const key = `ciq-milestone-${accountId}`;
+    let prev: number | null = null;
+    try { const v = localStorage.getItem(key); prev = v === null ? null : Number(v); localStorage.setItem(key, String(milestone)); } catch { /* storage unavailable */ }
+    if (prev !== null && milestone > prev && milestone > 0) {
+      setCelebrate(milestone >= 4 ? "Emergency fund goal reached — a golden tangerine is growing! 🎉" : `Milestone reached: ${milestone * 25}% of your emergency fund 🎉`);
+      const t = setTimeout(() => setCelebrate(null), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [accountId, milestone, hasData]);
+  return celebrate;
+}
+
+export default function HomePage() {
+  const me = useMe();
+  const role = me.data?.role ?? null;   // server-verified role
+  const accountId = useAccount();
+  const settings = useSettings();
+  const update = useUpdatePrefs();
+  const profile = useProfile();
+  const summary = useSummary(accountId);
+  const [arranging, setArranging] = useState(false);
+  const [showGrowth, setShowGrowth] = useState(false);
+
+  const prefs = settings.data?.preferences;
+  const dash = prefs?.dashboard ?? DEFAULT_DASHBOARD;
+  const appearance = { ...DEFAULT_APPEARANCE, ...(prefs?.appearance ?? {}) };
+  // Which figure sits in the orchard: default, the user's photo as a portrait, or their generated character.
+  const mode: CharacterMode = prefs?.avatar?.character
+    ?? (prefs?.avatar?.personalized_enabled && profile.data?.avatar ? "generated" : "default");
+  const photoUrl = useMediaUrl("photo", mode === "photo" ? profile.data?.photo?.version : null);
+  const avatarUrl = useMediaUrl("avatar", mode === "generated" ? profile.data?.avatar?.version : null);
+  const character = { mode, url: mode === "photo" ? photoUrl : mode === "generated" ? avatarUrl : null,
+                      transparent: !!profile.data?.avatar?.transparent };
+  const growth = useMemo(() => (appearance.growth_visuals ? growthFromSummary(summary.data) : DECORATIVE_GROWTH),
+    [appearance.growth_visuals, summary.data]);
+  const celebrate = useMilestoneCelebration(accountId, growth.milestone, growth.data && appearance.growth_visuals);
+  const features = homeFeatures(dash, role);
+  const name = profile.data?.display_name;
 
   return (
-    <div className="space-y-6">
-      <PageHeader title={accountId ? `${greeting()} 👋` : "Welcome to ClementIQ"}
-        subtitle={accountId ? <>Here’s the financial picture for account <b>#{accountId}</b>{s && <> · data through {s.data_as_of}</>}</> : "Your Daily Dose of Financial Intelligence"}
-        computedAt={s?.computed_at} />
-      {!accountId && <NeedAccount />}
-      {error && <ErrorState error={error} retry={refetch} />}
-      {accountId && isLoading && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-36" />)}</div>}
-      {s && (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <FinancialMetricCard label="Monthly income (I)" value={money(s.judging.I)} icon={Banknote} tone="good" calc={calc("income_I")} sub="Typical month · median of money in" />
-            <FinancialMetricCard label="Monthly expenses (S)" value={money(s.judging.S)} icon={ShoppingCart} tone="orange" calc={calc("spending_S")}
-              sub={<>Fixed costs {money(s.judging.F)} · bills {money(s.judging.H)}</>} />
-            <FinancialMetricCard label="Savings buffer (B)" value={money(s.judging.B)} icon={PiggyBank} tone="blue" calc={calc("buffer_B")}
-              sub={<>{s.metrics.coverage_months !== null ? `${s.metrics.coverage_months.toFixed(1)} months of spending` : "—"} · last 6 months avg</>} />
-            <FinancialMetricCard label="Outstanding loans" value={s.loan?.running ? money(s.judging.P) + "/mo" : "None running"} icon={Landmark} tone="violet" calc={calc("loan_payment_P")}
-              sub={s.loan ? <>Loan #{s.loan.loan_id} · status {s.loan.status} · {money(s.loan.amount)} over {s.loan.duration_months} mo</> : "No loan on record"} />
+    <div className="pb-16">
+      <OrchardScene appearance={appearance} growth={growth} character={character} celebrate={!!celebrate} className="h-[700px] sm:h-[600px] lg:h-[580px]">
+        <HomeTopBar />
+        {me.data?.entitlements.account_search && (
+          <div className="relative z-20 mx-auto mt-3 max-w-[1500px] px-4 sm:px-8">
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl border-2 border-white bg-white/95 p-3 shadow-lg dark:border-white/10 dark:bg-[#241c16]/95" role="region" aria-label="Judge tools">
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-ink"><Gavel className="size-4 text-tangerine" /> Judge tools</span>
+              <AccountSearch className="w-full sm:w-auto sm:flex-1" />
+              {me.data.entitlements.judge_demo && (
+                <Link href="/judge" className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-tangerine px-4 text-sm font-semibold text-white shadow-sm hover:brightness-105 sm:w-auto">Open Judge Demo</Link>
+              )}
+            </div>
           </div>
+        )}
+        <div className="relative mx-auto flex max-w-[1500px] justify-end px-4 pt-5 sm:px-8 md:pt-6">
+          <section className="glass w-full max-w-xl rounded-[28px] p-5 shadow-lg sm:p-7 md:w-[52%]" aria-labelledby="hero-title">
+            <p className="text-base font-semibold text-ink-2">{greeting()}{name ? `, ${name}` : ""} 👋</p>
+            <h1 id="hero-title" className="mt-1 text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-[40px]">Your financial future is growing. 🍊</h1>
+            <p className="mt-2 text-lg text-ink-2">One smart decision at a time.</p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {me.data && !me.data.entitlements.account_search && accountId && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-sm"><Lock className="size-3.5" /> Your account #{accountId}</span>
+              )}
+              {me.data?.entitlements.account_search && accountId && <span className="inline-flex items-center rounded-full bg-white/80 px-3 py-2 text-xs font-semibold text-slate-800">Viewing account #{accountId}</span>}
+              {appearance.growth_visuals && (
+                <button onClick={() => setShowGrowth((v) => !v)} aria-expanded={showGrowth}
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-white/70 px-3 py-2 text-xs font-semibold text-ink hover:bg-white dark:bg-white/10">
+                  <Sprout className="size-4 text-good" /> How your orchard grows
+                </button>
+              )}
+            </div>
+            {showGrowth && (
+              <ul className="mt-3 space-y-1 rounded-2xl bg-white/70 p-3 text-xs text-ink-2 dark:bg-white/5">
+                {growth.captions.map((c) => <li key={c}>{c}</li>)}
+                {growth.data && <li className="pt-1 text-[11px] text-ink-3">Based on account #{accountId} (Clement Core). Setbacks never make the orchard wilt.</li>}
+              </ul>
+            )}
+          </section>
+        </div>
+      </OrchardScene>
 
-          <div className="grid gap-4 xl:grid-cols-3">
-            <Card className="xl:col-span-2">
-              <CardHeader><div><CardTitle>Net account position</CardTitle><CardDescription>Balance minus remaining scheduled loan payments</CardDescription></div><EngineBadge engine="clement-core" /></CardHeader>
-              <CardContent><NetWorthChart data={s.net_position.series} label={s.net_position.label} /></CardContent>
-            </Card>
-            <Card>
-              <CardHeader><div><CardTitle>Financial resilience</CardTitle><CardDescription>Project-defined, educational 0–100 score</CardDescription></div></CardHeader>
-              <CardContent className="flex flex-col items-center gap-3">
-                <ResilienceScoreGauge score={s.resilience.score} band={s.resilience.band} />
-                <div className="w-full space-y-1.5">
-                  {s.resilience.breakdown.slice(0, 4).map((b) => (
-                    <div key={b.key}><div className="flex justify-between text-[11px]"><span className="text-ink-2">{b.label}</span><span className="tabular font-semibold">{b.points.toFixed(0)}/{b.max_points.toFixed(0)}</span></div><Progress value={b.score * 100} label={b.label} /></div>
-                  ))}
-                </div>
-                <Button asChild variant="link" size="sm"><Link href="/resilience">Full breakdown <ArrowRight /></Link></Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-3">
-            <Card>
-              <CardHeader><div><CardTitle className="flex items-center gap-2"><Zap className="size-4 text-tangerine" /> Shock simulator preview</CardTitle><CardDescription>Laid off · EI pays 55% for 6 months</CardDescription></div></CardHeader>
-              <CardContent>
-                {shock.data ? <>
-                  <FinancialRunwayGauge runway={shock.data.scenario.runway} size={180} />
-                  {shock.data.verdict && <p className={`mt-2 text-center text-xs font-semibold ${shock.data.verdict.survives ? "text-good" : "text-bad"}`}>{shock.data.verdict.survives ? "✓ Makes it" : "▲ Falls short"} · gap {money(shock.data.scenario.gap)}/mo</p>}
-                </> : <Skeleton className="h-32" />}
-                <Button asChild variant="secondary" size="sm" className="mt-3 w-full"><Link href="/simulator">Open simulator</Link></Button>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader><div><CardTitle>Recovery plan progress</CardTitle><CardDescription>Goal: 3 months of typical spending</CardDescription></div></CardHeader>
-              <CardContent className="space-y-3">
-                {goal.data ? <>
-                  <div className="flex items-end justify-between"><p className="tabular text-2xl font-bold">{goal.data.progress_pct.toFixed(0)}%</p><p className="text-xs text-ink-2">{money(goal.data.current_buffer)} of {money(goal.data.target)}</p></div>
-                  <Progress value={goal.data.progress_pct} tone="good" label="Emergency fund progress" />
-                  <p className="text-xs text-ink-2">{goal.data.months_to_goal === 0 ? "Target already reached — consider a 6-month goal." : goal.data.months_to_goal ? <>Save <b>{money(goal.data.recommended_monthly_contribution)}</b>/month → about <b>{goal.data.months_to_goal}</b> months.</> : "Spending uses all income — the Goal Plan shows which reductions create room."}</p>
-                </> : <Skeleton className="h-24" />}
-                <Button asChild variant="secondary" size="sm" className="w-full"><Link href="/recovery">See Goal & Backup plans</Link></Button>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader><div><CardTitle className="flex items-center gap-2"><TrendingUp className="size-4 text-invest" /> Investment portfolio</CardTitle><CardDescription>Separate from your emergency buffer</CardDescription></div></CardHeader>
-              <CardContent className="space-y-2">
-                {portfolio.data && portfolio.data.holdings.length > 0 ? <>
-                  <p className="tabular text-2xl font-bold">{money(portfolio.data.total_value)}</p>
-                  <div className="flex flex-wrap gap-1">{portfolio.data.holding_kinds.map((k) => <Badge key={k} tone={k === "demo" ? "warn" : "violet"}>{k} holdings</Badge>)}</div>
-                  <p className="text-xs text-ink-2">{portfolio.data.allocation.map((a) => `${a.asset_class} ${pct(a.weight)}`).join(" · ")}</p>
-                </> : <p className="text-xs text-ink-2">The Tangerine data contains no investments. Add your own holdings or load a clearly labelled demo portfolio.</p>}
-                <Button asChild variant="secondary" size="sm" className="w-full"><Link href="/investments">Open investments</Link></Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardHeader><div><CardTitle>WorldPulse</CardTitle><CardDescription>Verified developments that could reach your budget</CardDescription></div>
-              <Button asChild variant="link" size="sm"><Link href="/worldpulse">All developments <ArrowRight /></Link></Button></CardHeader>
-            <CardContent>
-              {events.data?.items.length ? (
-                <ul className="divide-y divide-line">{events.data.items.slice(0, 4).map((e) => (
-                  <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
-                    <div className="min-w-0"><p className="truncate text-sm font-medium">{e.headline}</p><p className="text-[11px] text-ink-2">{e.source_name} · {timeAgo(e.published_at)} · {e.topic_label}</p></div>
-                    <Button asChild size="sm" variant="outline"><Link href={`/worldpulse?event=${e.id}&topic=${e.topic}`}>Simulate impact</Link></Button>
-                  </li>
-                ))}</ul>
-              ) : <p className="text-xs text-ink-2">{events.data?.empty_reason ?? "Loading…"} <Link className="font-semibold text-tangerine" href="/worldpulse">Open WorldPulse</Link></p>}
-            </CardContent>
-          </Card>
-        </>
+      {celebrate && (
+        <div role="status" className="fixed left-1/2 top-6 z-50 -translate-x-1/2 rounded-full bg-surface px-5 py-2.5 text-sm font-semibold text-ink shadow-xl ring-1 ring-line">{celebrate}</div>
       )}
+
+      <div className="relative z-10 mx-auto -mt-24 max-w-[1500px] px-3 sm:px-6">
+        <div className="glass rounded-[32px] p-4 shadow-xl ring-1 ring-white/60 sm:p-6 dark:ring-white/5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-ink">Choose a focus area</h2>
+              <p className="text-xs text-ink-2">{features.length} of your tools · favorites first</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="inline-flex rounded-full bg-white/70 p-1 dark:bg-white/5" role="group" aria-label="Layout density">
+                {DENSITIES.map((d) => (
+                  <button key={d.id} aria-pressed={dash.layout_density === d.id} onClick={() => update.mutate({ dashboard: { layout_density: d.id } })}
+                    className={cn("cursor-pointer rounded-full px-3 py-1 text-xs font-semibold", dash.layout_density === d.id ? "bg-tangerine text-white" : "text-ink-2")}>{d.label}</button>
+                ))}
+              </div>
+              {features.length > 1 && (
+                <Button size="sm" variant={arranging ? "default" : "outline"} onClick={() => setArranging((v) => !v)}>
+                  {arranging ? <><Check /> Done</> : <><Move /> Arrange</>}
+                </Button>
+              )}
+            </div>
+          </div>
+          {arranging && <p className="mb-3 flex items-center gap-1.5 text-xs text-ink-2"><Info className="size-3.5" /> Drag cards by their handle (or focus it and use the arrow keys). Favorites always stay at the front.</p>}
+
+          {settings.isLoading ? (
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-56 rounded-3xl" />)}</div>
+          ) : features.length ? (
+            <FeatureGrid features={features} density={dash.layout_density} favorites={dash.favorites} arranging={arranging}
+              onToggleFavorite={(id) => update.mutate({ dashboard: { favorites: toggledFavorites(dash.favorites, id) } })}
+              onReorder={(ids) => update.mutate({ dashboard: { order: reorderedIds(ids, dash, role) } })} />
+          ) : (
+            <div className="flex flex-col items-center gap-3 rounded-3xl peach-gradient px-6 py-14 text-center">
+              <span className="text-5xl" aria-hidden>🍊</span>
+              <p className="text-xl font-bold text-ink">Your financial garden is ready to grow. 🍊</p>
+              <p className="max-w-md text-sm text-ink-2">You’ve hidden every tool. Nothing was deleted — pick the features you want back on your dashboard.</p>
+              <Button asChild size="lg"><Link href="/settings?section=dashboard">Choose Your Features</Link></Button>
+            </div>
+          )}
+          {update.isError && <p className="mt-3 text-xs text-bad">Couldn’t save that change — your previous layout was restored. {(update.error as Error).message}</p>}
+        </div>
+      </div>
     </div>
   );
 }

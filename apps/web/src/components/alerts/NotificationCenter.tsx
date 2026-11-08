@@ -5,12 +5,13 @@ import { Bell, CheckCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Alert } from "@clementiq/shared-types";
 import { api } from "@/lib/api";
+import { cn } from "@/lib/utils";
 import { timeAgo } from "@/lib/format";
 import { useAlerts, useMarkAlert, useSettings } from "@/lib/hooks";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/controls";
 import { SeverityBadge } from "./SeverityBadge";
 
-export function NotificationCenter() {
+export function NotificationCenter({ className }: { className?: string }) {
   const { data } = useAlerts({ limit: 8 });
   const settings = useSettings();
   const mark = useMarkAlert();
@@ -32,9 +33,9 @@ export function NotificationCenter() {
   const unread = data?.unread ?? 0;
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger aria-label={`Notifications, ${unread} unread`} className="relative cursor-pointer rounded-full p-2 text-white hover:bg-white/15">
-        <Bell className="size-5" />
-        {unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-white px-1 text-[10px] font-bold text-tangerine">{unread > 99 ? "99+" : unread}</span>}
+      <DropdownMenuTrigger aria-label={`Notifications, ${unread} unread`} className={cn("relative grid size-9 cursor-pointer place-items-center rounded-full", className)}>
+        <Bell className="size-[18px]" />
+        {unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-tangerine px-1 text-[10px] font-bold text-white ring-2 ring-white">{unread > 99 ? "99+" : unread}</span>}
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[min(92vw,380px)] p-0">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">

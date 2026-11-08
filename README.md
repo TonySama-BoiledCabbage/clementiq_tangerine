@@ -112,6 +112,17 @@ See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for Vultr, HTTPS and the custom dom
 
 ---
 
+## The ClementIQ Orchard (Home)
+
+Home is a feature launcher, not a crowded dashboard. A golden-hour tangerine orchard (illustrated in layered SVG) greets you, and below it sit only the tools **you** chose, as pastel cards. Opening a card enters a focused workspace with a **Back to Home** button. There is no permanent sidebar.
+
+- **Customize My Dashboard** (Settings): every tool has its own ON/OFF switch, with search, categories (switch a whole category at once), favorites (pinned first), drag-and-drop order, Minimal / Balanced / Compact density, a live preview, and **Enable All**, **Hide Optional Features** and **Restore Default Layout**. Changes save automatically to your account (`user_preferences`), so they persist across refreshes, sign-ins and devices, and each person keeps their own. Hiding a tool never deletes data or stops background jobs.
+- **New users** start with Financial Dashboard, Shock Simulator, Recovery Plans and AI Financial Advisor (judges also get Judge Demo).
+- **The orchard reflects real progress** (optional): tangerines show emergency-fund progress, golden tangerines appear at 3, 6 and 9 months saved, the canopy follows the resilience score, and positive cash flow warms the light. It never wilts on setbacks.
+- **Profile photo and orchard avatar**: upload a photo (validated, re-encoded, metadata stripped, private to you). With explicit consent, Gemini's image model can turn it into a stylised character who replaces the default one in the orchard. If generation fails, the default character stays.
+- **Appearance**: light, dark or system theme; orchard, money trees, floating coins and animations on/off; animation intensity; reduced motion. A photorealistic orchard is used if you add your own image at `apps/web/public/orchard/photo.jpg`.
+- **Privacy & AI**: turning off personalized AI guidance means nothing about you is sent to Gemini; template explanations are used instead.
+
 ## Features at a glance
 
 | Area | Where | Notes |

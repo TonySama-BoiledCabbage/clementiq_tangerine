@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     gemini_model: str = Field("gemini-flash-latest", alias="GEMINI_MODEL")
     gemini_grounding: bool = Field(False, alias="GEMINI_GROUNDING")
     gemini_timeout_s: float = Field(30.0, alias="GEMINI_TIMEOUT_S")
+    # Image model for the optional, consent-based orchard avatar.
+    gemini_image_model: str = Field("gemini-2.5-flash-image", alias="GEMINI_IMAGE_MODEL")
+    max_upload_bytes: int = Field(5 * 1024 * 1024, alias="MAX_UPLOAD_BYTES")
 
     # --- Snowflake Cortex (optional) ---
     snowflake_account_url: str | None = Field(None, alias="SNOWFLAKE_ACCOUNT_URL")

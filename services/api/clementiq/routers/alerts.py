@@ -11,7 +11,7 @@ from ..auth import Principal, authorize_account, current_principal
 from ..db import get_db
 
 router = APIRouter(prefix="/api/alerts", tags=["alerts"])
-CATEGORIES = ["financial_health", "global_events", "investments", "crypto", "loan_exposure", "savings_goals"]
+CATEGORIES = ["financial_health", "global_events", "investments", "crypto", "loan_exposure", "savings_goals", "reminders"]
 
 
 @router.get("")

@@ -14,7 +14,7 @@ from ..config import get_settings
 from ..core.recovery import GoalPlanRequest, backup_plan, goal_plan
 from ..core.shocks import ShockRequest, apply_shocks
 from ..db import get_db
-from ..repository import audit, get_baseline
+from ..repository import ai_allowed, audit, get_baseline
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
@@ -49,6 +49,8 @@ def chat(body: ChatBody, p: Principal = Depends(current_principal), db: Session 
         msgs[0] = {**msgs[0], "content": f"(Context: the user is viewing account_id {acc}.)\n" + msgs[0]["content"]}
     audit(db, p.sub, "ai_chat", f"account:{acc}", turns=len(msgs))
     try:
+        if not ai_allowed(db, p.sub):
+            raise gemini.GeminiUnavailable("Personalized AI guidance is turned off in Settings → Privacy & AI")
         res = gemini.chat_with_tools(msgs, TOOL_DECLARATIONS, ex)
         allowed = gemini.collect_numbers(ex.facts)
         res["number_check"] = gemini.verify_numbers(res["text"], allowed)
@@ -72,7 +74,7 @@ def explain(body: ExplainScenarioBody, p: Principal = Depends(current_principal)
         sim = apply_shocks(b, body.request, get_settings().ei_max_weekly_benefit)
     except ValueError as exc:
         raise HTTPException(422, str(exc)) from exc
-    return {"simulation_hash": sim["input_hash"], **explain_scenario(db, sim, financial_context(b))}
+    return {"simulation_hash": sim["input_hash"], **explain_scenario(db, sim, financial_context(b), allow_ai=ai_allowed(db, p.sub))}
 
 
 class ExplainPlanBody(BaseModel):
@@ -92,4 +94,4 @@ def explain_plan_route(body: ExplainPlanBody, p: Principal = Depends(current_pri
         if not body.shock:
             raise HTTPException(422, "shock required for backup plan explanation")
         plan = backup_plan(b, body.shock, get_settings().ei_max_weekly_benefit)
-    return explain_plan(db, plan, financial_context(b))
+    return explain_plan(db, plan, financial_context(b), allow_ai=ai_allowed(db, p.sub))

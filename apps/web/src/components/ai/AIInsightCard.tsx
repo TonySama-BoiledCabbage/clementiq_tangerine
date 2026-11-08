@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Sparkles } from "lucide-react";
 import type { AIResult } from "@clementiq/shared-types";
 import { api } from "@/lib/api";
+import { useSettings } from "@/lib/hooks";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ErrorState, Spinner } from "@/components/ui/misc";
@@ -20,6 +21,9 @@ export function AIInsightCard({ title = "Explain with Clement Gemini", endpoint,
 }) {
   const m = useMutation({ mutationFn: () => api<AIResult<ScenarioExplanation & PlanExplanation> & { explanation?: AIResult<ScenarioExplanation & PlanExplanation> }>(endpoint, { method: "POST", json: body }) });
   const res = m.data?.explanation ?? m.data;
+  const settings = useSettings();
+  // "Optional AI insights" off in Settings → Privacy & AI hides these cards (calculations are unaffected).
+  if (settings.data && settings.data.preferences.privacy?.optional_ai_insights === false) return null;
   return (
     <Card className="overflow-hidden">
       <div className="flex items-center justify-between gap-2 border-b border-line bg-gradient-to-r from-violet-50 to-peach px-4 py-3 dark:from-violet-950/40">

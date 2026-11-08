@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from .. import models
-from ..auth import LoginRequest, Principal, current_principal, issue_token, require_admin
+from ..auth import RESTRICTED_FEATURES, LoginRequest, Principal, current_principal, entitled, issue_token, require_admin, require_judge
 from ..config import get_settings
 from ..core.provenance import ENGINE_VERSION
 from ..db import get_db
@@ -44,21 +44,56 @@ def demo_login(req: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/auth/me")
 def me(p: Principal = Depends(current_principal)):
-    return {"sub": p.sub, "role": p.role, "account_id": p.account_id, "read_only": p.read_only}
+    """Server-verified identity and entitlements (role decoded from the signed token)."""
+    return {"sub": p.sub, "role": p.role, "account_id": p.account_id, "read_only": p.read_only,
+            "entitlements": {"judge_demo": entitled(p, "judgeDemo"), "account_search": p.role in ("judge", "admin"),
+                             "data_import_view": entitled(p, "dataImport"), "data_import_run": p.role == "admin"},
+            "features_allowed": [f for f in RESTRICTED_FEATURES if entitled(p, f)]}
 
 
 @router.get("/settings")
 def get_settings_route(p: Principal = Depends(current_principal), db: Session = Depends(get_db)):
     s = get_settings()
-    return {"preferences": get_prefs(db, p.sub),
+    return {"preferences": _visible_prefs(get_prefs(db, p.sub), p),
             "integrations": {"gemini": s.gemini_enabled, "gemini_model": s.gemini_model, "gemini_grounding": s.gemini_grounding,
                              "snowflake": s.snowflake_enabled, "news_api": bool(s.news_api_key),
                              "alpha_vantage": bool(s.alpha_vantage_key), "email": bool(s.smtp_host),
                              "worldpulse_live": s.worldpulse_live, "database": "sqlite" if s.is_sqlite else "postgresql"}}
 
 
+def _visible_prefs(prefs: dict, p: Principal) -> dict:
+    """Defence in depth: restricted features are never reported as enabled for non-entitled users."""
+    dash = prefs.get("dashboard", {})
+    for fid in RESTRICTED_FEATURES:
+        if not entitled(p, fid):
+            dash.get("features", {}).pop(fid, None)
+            dash["favorites"] = [x for x in dash.get("favorites", []) if x != fid]
+    return prefs
+
+
+def _check_entitlements(patch: PrefsPatch, p: Principal) -> None:
+    d = patch.dashboard
+    if not d:
+        return
+    wanted = {k for k, v in (d.features or {}).items() if v} | set(d.favorites or [])
+    blocked = sorted(f for f in wanted if not entitled(p, f))
+    if blocked:
+        raise HTTPException(403, f"Not available for your role: {', '.join(blocked)}")
+
+
+def _check_avatar_choice(patch: PrefsPatch, p: Principal, db: Session) -> None:
+    choice = patch.avatar.character if patch.avatar else None
+    if choice in ("photo", "generated"):
+        kind = "photo" if choice == "photo" else "avatar"
+        exists = db.execute(select(models.UserMedia.id).where(models.UserMedia.owner == p.sub, models.UserMedia.kind == kind)).first()
+        if not exists:
+            raise HTTPException(422, "Upload a profile photo first" if choice == "photo" else "Generate your orchard character first")
+
+
 @router.patch("/settings")
 def patch_settings(patch: PrefsPatch, p: Principal = Depends(current_principal), db: Session = Depends(get_db)):
+    _check_entitlements(patch, p)
+    _check_avatar_choice(patch, p, db)
     row = db.get(models.UserPreference, p.sub)
     current = row.data if row else {}
     merged = merge_prefs(current, patch.model_dump(exclude_none=True, mode="json"))
@@ -69,7 +104,7 @@ def patch_settings(patch: PrefsPatch, p: Principal = Depends(current_principal),
         row.updated_at = datetime.now(timezone.utc)
     db.commit()
     audit(db, p.sub, "settings_update", None, keys=list(patch.model_dump(exclude_none=True)))
-    return {"preferences": get_prefs(db, p.sub)}
+    return {"preferences": _visible_prefs(get_prefs(db, p.sub), p)}
 
 
 @router.get("/system/sources")
@@ -78,7 +113,7 @@ def sources(p: Principal = Depends(current_principal), db: Session = Depends(get
 
 
 @router.get("/admin/imports")
-def import_status(p: Principal = Depends(current_principal), db: Session = Depends(get_db)):
+def import_status(p: Principal = Depends(require_judge), db: Session = Depends(get_db)):
     from ..ingestion.schemas import SCHEMAS
     out = []
     for sch in SCHEMAS:

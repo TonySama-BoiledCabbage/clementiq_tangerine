@@ -93,3 +93,49 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 :focus-visible { outline: 2px solid var(--tangerine); outline-offset: 2px; border-radius: 6px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 .recharts-tooltip-wrapper { outline: none; }
+
+/* ───────────── Orchard redesign: pastel card palettes ───────────── */
+.pal-mint     { --c1: #e3f8ee; --c2: #c8efdb; --btn: #bfead3; --btn-ink: #13603b; --accent: #22a06b; }
+.pal-peach    { --c1: #fff1e6; --c2: #ffdcc4; --btn: #ffd6bd; --btn-ink: #9a3d0a; --accent: #ff7a1a; }
+.pal-lavender { --c1: #f1ebff; --c2: #dfd3fb; --btn: #ddd0fb; --btn-ink: #4c2c9a; --accent: #7c5ce6; }
+.pal-sky      { --c1: #e6f1ff; --c2: #cfe3fd; --btn: #c9defc; --btn-ink: #1d4f9a; --accent: #3b82f6; }
+.pal-rose     { --c1: #ffecef; --c2: #fbd3da; --btn: #fbd0d8; --btn-ink: #9b1f3a; --accent: #e8506f; }
+.pal-butter   { --c1: #fff8e2; --c2: #ffecb8; --btn: #ffe6a6; --btn-ink: #7a4f00; --accent: #e5a400; }
+.pal-teal     { --c1: #e2f7f5; --c2: #c3ece7; --btn: #bfe9e3; --btn-ink: #0d5e57; --accent: #14a39a; }
+.pal-violet   { --c1: #f3ecff; --c2: #e2d2ff; --btn: #dfccff; --btn-ink: #5b21b6; --accent: #8b5cf6; }
+.pal-coral    { --c1: #fff0eb; --c2: #ffd7cb; --btn: #ffd2c3; --btn-ink: #9a2f12; --accent: #f26b45; }
+.pal-sage     { --c1: #eef5e6; --c2: #d9e9c8; --btn: #d4e7c0; --btn-ink: #3f5f1d; --accent: #6b9a35; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) [class*="pal-"] { --c1: color-mix(in oklab, var(--accent) 16%, #1f1914); --c2: color-mix(in oklab, var(--accent) 28%, #1f1914); --btn: color-mix(in oklab, var(--accent) 30%, #1f1914); --btn-ink: #fff7ef; }
+}
+:root[data-theme="dark"] [class*="pal-"] { --c1: color-mix(in oklab, var(--accent) 16%, #1f1914); --c2: color-mix(in oklab, var(--accent) 28%, #1f1914); --btn: color-mix(in oklab, var(--accent) 30%, #1f1914); --btn-ink: #fff7ef; }
+.pal-card { background: linear-gradient(150deg, var(--c1), var(--c2)); }
+.pal-btn { background: var(--btn); color: var(--btn-ink); }
+.glass { background: color-mix(in oklab, var(--surface) 62%, transparent); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2); }
+
+/* ───────────── Orchard animations (gated by data-anim + reduced motion) ───────────── */
+.orchard { --anim-speed: 1; }
+.orchard[data-intensity="low"] { --anim-speed: 1.8; }
+.orchard[data-intensity="high"] { --anim-speed: 0.65; }
+@keyframes orchard-sway { 0%, 100% { transform: rotate(-0.8deg); } 50% { transform: rotate(0.9deg); } }
+@keyframes orchard-swing { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(5deg); } }
+@keyframes orchard-glow { 0%, 100% { opacity: 0.35; } 50% { opacity: 0.95; } }
+@keyframes orchard-sun { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.05); } }
+@keyframes orchard-float { 0% { transform: translateY(0) translateX(0); opacity: 0; } 15% { opacity: 0.9; } 100% { transform: translateY(-160px) translateX(18px); opacity: 0; } }
+@keyframes orchard-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes orchard-pop { 0% { transform: scale(0.4); opacity: 0; } 30% { opacity: 1; } 100% { transform: scale(1.6); opacity: 0; } }
+.orchard[data-anim="on"] .anim-sway { transform-box: fill-box; transform-origin: 50% 100%; animation: orchard-sway calc(7s * var(--anim-speed)) ease-in-out infinite; }
+.orchard[data-anim="on"] .anim-swing { transform-box: fill-box; transform-origin: 50% 0%; animation: orchard-swing calc(4.5s * var(--anim-speed)) ease-in-out infinite; }
+.orchard[data-anim="on"] .anim-glow { animation: orchard-glow calc(3.2s * var(--anim-speed)) ease-in-out infinite; }
+.orchard[data-anim="on"] .anim-sun { transform-box: fill-box; transform-origin: center; animation: orchard-sun calc(9s * var(--anim-speed)) ease-in-out infinite; }
+.orchard[data-anim="on"] .anim-float { animation: orchard-float calc(9s * var(--anim-speed)) linear infinite; }
+.orchard[data-anim="on"] .anim-bob { animation: orchard-bob calc(6s * var(--anim-speed)) ease-in-out infinite; }
+.orchard .anim-pop { animation: orchard-pop 1.6s ease-out forwards; }
+.card-lift { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.card-lift:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -18px rgb(255 107 0 / 0.35); }
+@media (prefers-reduced-motion: reduce) {
+  .orchard .anim-sway, .orchard .anim-swing, .orchard .anim-glow, .orchard .anim-sun, .orchard .anim-float, .orchard .anim-bob, .orchard .anim-pop { animation: none !important; }
+  .card-lift:hover { transform: none; }
+}
+/* User-selected "Reduced motion" in Settings (in addition to the OS preference). */
+:root[data-reduced-motion="true"] *, :root[data-reduced-motion="true"] *::before, :root[data-reduced-motion="true"] *::after { animation: none !important; transition: none !important; }

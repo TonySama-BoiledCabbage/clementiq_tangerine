@@ -7,6 +7,7 @@ callers fall back to deterministic templates.
 """
 from __future__ import annotations
 
+import base64
 import json
 import logging
 import re
@@ -42,18 +43,55 @@ class GeminiUnavailable(RuntimeError):
     pass
 
 
-def _post(body: dict[str, Any]) -> dict[str, Any]:
+def _post(body: dict[str, Any], model: str | None = None, timeout: float | None = None) -> dict[str, Any]:
     s = get_settings()
     if not s.gemini_enabled:
         raise GeminiUnavailable("GEMINI_API_KEY not configured")
     try:
-        resp = httpx.post(API.format(model=s.gemini_model), json=body, timeout=s.gemini_timeout_s,
+        resp = httpx.post(API.format(model=model or s.gemini_model), json=body, timeout=timeout or s.gemini_timeout_s,
                           headers={"x-goog-api-key": s.gemini_api_key or "", "Content-Type": "application/json"})
     except httpx.HTTPError as exc:
         raise GeminiUnavailable(f"network error: {exc.__class__.__name__}") from exc
     if resp.status_code != 200:
         raise GeminiUnavailable(f"Gemini HTTP {resp.status_code}: {resp.text[:300]}")
     return resp.json()
+
+
+AVATAR_PROMPT = (
+    "Create a warm, stylised illustrated character portrait based on the person in this photo. "
+    "Keep their likeness: face shape, hairstyle, hair colour, skin tone and general appearance must stay "
+    "faithful to the photo — do not lighten or darken their skin or change their features. "
+    "Show them from the waist up, sitting relaxed and smiling, holding a peeled tangerine and eating a segment. "
+    "Lighting: warm golden-hour sunset light from the right, matching a tangerine orchard scene. "
+    "Style: soft painterly digital illustration, gentle shading, friendly and tasteful. "
+    "IMPORTANT: place the character on a completely flat, uniform pure green background (#00FF00) with no "
+    "scenery, no shadows on the background and no green in the character, so it can be cut out. "
+    "Person centred, facing slightly to the right. No text, no logos, no watermark, no extra people."
+)
+
+
+def generate_avatar(photo: bytes, mime: str) -> tuple[bytes, str, str]:
+    """Image-to-image generation with the Gemini image model. Returns (bytes, mime, model).
+    Callers must have verified the user's explicit consent before calling this."""
+    s = get_settings()
+    body = {
+        "contents": [{"role": "user", "parts": [
+            {"text": AVATAR_PROMPT},
+            {"inlineData": {"mimeType": mime, "data": base64.b64encode(photo).decode()}},
+        ]}],
+        "generationConfig": {"responseModalities": ["TEXT", "IMAGE"], "temperature": 0.6},
+    }
+    data = _post(body, model=s.gemini_image_model, timeout=max(s.gemini_timeout_s, 90))
+    try:
+        parts = data["candidates"][0]["content"]["parts"]
+    except (KeyError, IndexError) as exc:
+        reason = (data.get("promptFeedback") or {}).get("blockReason") or "no image returned"
+        raise GeminiUnavailable(f"image generation failed: {reason}") from exc
+    for p in parts:
+        inline = p.get("inlineData") or p.get("inline_data")
+        if inline and inline.get("data"):
+            return base64.b64decode(inline["data"]), inline.get("mimeType") or inline.get("mime_type") or "image/png", s.gemini_image_model
+    raise GeminiUnavailable("image generation returned no image (the request may have been declined)")
 
 
 def _text(data: dict[str, Any]) -> str:
