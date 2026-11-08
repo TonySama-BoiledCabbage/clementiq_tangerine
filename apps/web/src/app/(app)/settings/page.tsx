@@ -1,47 +1,35 @@
 "use client";
-import { CheckCircle2, CircleSlash } from "lucide-react";
-import { useSaveSettings, useSettings, useSources } from "@/lib/hooks";
+import { useSaveSettings, useSettings } from "@/lib/hooks";
 import { useSession } from "@/lib/store";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/controls";
-import { Skeleton } from "@/components/ui/misc";
-import { PageHeader } from "@/components/layout/PageKit";
+import { ErrorState, SectionTitle, Skeleton } from "@/components/ui/misc";
 import { AlertPreferences } from "@/components/alerts/AlertPreferences";
-import { DataSourceStatus } from "@/components/world/WorldPulse";
-
-const INTEGRATION_LABEL: Record<string, string> = {
-  gemini: "Google Gemini API", gemini_grounding: "Gemini Google Search grounding", snowflake: "Snowflake Cortex (optional)", news_api: "NewsAPI.org (optional)",
-  alpha_vantage: "Alpha Vantage (optional)", email: "SMTP email delivery", worldpulse_live: "Live WorldPulse retrieval",
-};
 
 export default function SettingsPage() {
   const s = useSettings();
   const save = useSaveSettings();
-  const sources = useSources();
-  const { sub, role } = useSession();
+  const sub = useSession((s) => s.sub);
   const d = s.data?.preferences.display;
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Settings" subtitle={`Signed in as ${sub} (${role})`} />
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card><CardHeader><div><CardTitle>Alerts & notifications</CardTitle><CardDescription>Opt-in channels, quiet hours, frequency limits, unsubscribe</CardDescription></div></CardHeader><CardContent><AlertPreferences /></CardContent></Card>
-        <div className="space-y-6">
-          <Card><CardHeader><div><CardTitle>Display & accessibility</CardTitle></div></CardHeader>
-            <CardContent className="space-y-3">
-              {!d ? <Skeleton className="h-16" /> : <>
-                <label className="flex items-center justify-between text-sm">Enable 3D visualisations<Switch checked={d.enable_3d} onCheckedChange={(v) => save.mutate({ display: { ...d, enable_3d: v } })} /></label>
-                <label className="flex items-center justify-between text-sm">Reduced motion<Switch checked={d.reduced_motion} onCheckedChange={(v) => save.mutate({ display: { ...d, reduced_motion: v } })} /></label>
-                <p className="text-[11px] text-ink-3">Your OS “reduce motion” setting is always respected; every 3D view has a 2D equivalent.</p>
-              </>}
-            </CardContent></Card>
-          <Card><CardHeader><div><CardTitle>Integrations</CardTitle><CardDescription>Configured server-side via environment variables — keys never reach the browser</CardDescription></div></CardHeader>
-            <CardContent><ul className="space-y-1.5 text-sm">{s.data && Object.entries(s.data.integrations).filter(([k]) => k in INTEGRATION_LABEL).map(([k, v]) => (
-              <li key={k} className="flex items-center justify-between">{INTEGRATION_LABEL[k]}{v ? <span className="flex items-center gap-1 text-xs text-good"><CheckCircle2 className="size-3.5" /> enabled</span> : <span className="flex items-center gap-1 text-xs text-ink-3"><CircleSlash className="size-3.5" /> not configured</span>}</li>
-            ))}
-            {s.data && <li className="flex items-center justify-between">Database<span className="text-xs text-ink-2">{String(s.data.integrations.database)}{s.data.integrations.gemini_model ? ` · Gemini ${s.data.integrations.gemini_model}` : ""}</span></li>}</ul></CardContent></Card>
-          <Card><CardHeader><div><CardTitle>Data source status</CardTitle></div></CardHeader><CardContent>{sources.data ? <DataSourceStatus sources={sources.data.sources} monitoring={sources.data.monitoring} /> : <Skeleton className="h-24" />}</CardContent></Card>
-        </div>
+  return <div className="space-y-6">
+    <SectionTitle title="Settings" subtitle={`Personal preferences for ${sub}`} />
+    {s.error && <ErrorState error={s.error} retry={s.refetch} />}
+    {save.error && <ErrorState error={save.error} />}
+    <div className="grid gap-6 xl:grid-cols-2">
+      <Card><CardHeader><div><CardTitle>Notifications</CardTitle><CardDescription>Choose channels, timing and frequency.</CardDescription></div></CardHeader><CardContent><AlertPreferences /></CardContent></Card>
+      <div className="space-y-6">
+        <Card><CardHeader><div><CardTitle>Privacy & AI</CardTitle><CardDescription>Core calculations and plans work without AI.</CardDescription></div></CardHeader><CardContent>
+          <label className="flex min-h-11 items-center justify-between gap-4 text-sm"><span>Allow personalized AI explanations</span><Switch checked={s.data?.preferences.privacy.personalized_ai ?? false} disabled={!s.data || save.isPending} onCheckedChange={(personalized_ai) => save.mutate({ privacy: { personalized_ai } })} /></label>
+          <p className="mt-2 text-xs leading-relaxed text-ink-2">Explanations are requested manually. Turning AI off uses standard text and sends no personalized explanation request to the model.</p>
+        </CardContent></Card>
+        <Card><CardHeader><div><CardTitle>Display & accessibility</CardTitle></div></CardHeader><CardContent className="space-y-3">
+          {!d ? <Skeleton className="h-16" /> : <>
+            <label className="flex min-h-11 items-center justify-between gap-4 text-sm"><span>Reduced motion</span><Switch checked={d.reduced_motion} disabled={save.isPending} onCheckedChange={(reduced_motion) => save.mutate({ display: { ...d, reduced_motion } })} /></label>
+            <label className="flex min-h-11 items-center justify-between gap-4 text-sm"><span>Enable 3D in optional visualisations</span><Switch checked={d.enable_3d} disabled={save.isPending} onCheckedChange={(enable_3d) => save.mutate({ display: { ...d, enable_3d } })} /></label>
+          </>}
+          <p className="text-xs leading-relaxed text-ink-2">Read aloud buttons use your browser speech support, only when selected. There is no automatic reading or separate paid speech service.</p>
+        </CardContent></Card>
       </div>
     </div>
-  );
+  </div>;
 }

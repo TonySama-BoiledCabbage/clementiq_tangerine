@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LogOut, Settings, UserRound } from "lucide-react";
+import { NotificationCenter } from "@/components/alerts/NotificationCenter";
 import { useSession } from "@/lib/store";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/controls";
 import { LogoMark } from "./Logo";
@@ -18,14 +19,15 @@ export function TopNavigation() {
           <LogoMark className="size-8" />
           <span className="text-[17px] font-semibold tracking-[-0.02em]">ClementIQ</span>
         </Link>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <NotificationCenter />
           <DropdownMenu>
             <DropdownMenuTrigger className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full pl-1 pr-1 text-ink hover:bg-black/5 sm:pr-3" aria-label="Account menu">
               <span className="grid size-8 place-items-center rounded-full bg-accent-tint text-tangerine"><UserRound className="size-[18px]" /></span>
               <span className="hidden text-[15px] font-medium sm:inline">{who}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuLabel>Signed in as <b className="text-ink">{sub}</b>{role === "judge" && <span className="block">Read-only judge access</span>}</DropdownMenuLabel>
+              <DropdownMenuLabel>Signed in as <b className="text-ink">{sub}</b>{role === "judge" && <span className="block">Read-only dataset · personal demo scenarios allowed</span>}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => router.push("/settings")}><Settings /> Settings</DropdownMenuItem>
               <DropdownMenuSeparator />

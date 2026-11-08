@@ -22,12 +22,12 @@ export function ImportStatusPanel() {
   if (q.error) return <ErrorState error={q.error} />;
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
+      {role === "admin" && <div className="flex flex-wrap items-center gap-2">
         <Button disabled={role !== "admin" || run.isPending} onClick={() => run.mutate(false)}>{run.isPending ? <Spinner /> : <Play />} Run import (skip unchanged)</Button>
         <Button variant="outline" disabled={role !== "admin" || run.isPending} onClick={() => run.mutate(true)}>Force full re-import</Button>
         {role !== "admin" && <span className="text-xs text-ink-3">Admin role required to run imports.</span>}
         {run.isSuccess && <Badge tone="good">import started in background</Badge>}
-      </div>
+      </div>}
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {q.data?.datasets.map((d) => {
           const r = d.last_run;

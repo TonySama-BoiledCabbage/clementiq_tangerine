@@ -1,5 +1,5 @@
 import type { ElementType } from "react";
-import { Activity, CalendarCheck, Database, Ellipsis, House, Inbox, LifeBuoy, Lightbulb, SlidersHorizontal, Sparkles, UserRound } from "lucide-react";
+import { Activity, CalendarCheck, Bell, Database, Ellipsis, House, Inbox, LifeBuoy, Lightbulb, SlidersHorizontal, Sparkles, UserRound } from "lucide-react";
 
 /**
  * Role-based navigation (Brief §11). Two products on one engine:
@@ -27,12 +27,16 @@ const STAFF_MORE: NavItem[] = [
   { href: "/recovery", label: "Recovery Plans", icon: LifeBuoy },
 ];
 const CUSTOMER_MORE: NavItem[] = [{ href: "/dashboard", label: "Account details", icon: UserRound }];
-export const NAV_ADMIN: NavItem[] = [{ href: "/admin", label: "Data Import", icon: Database }];
+export const NAV_ADMIN: NavItem[] = [{ href: "/admin", label: "Data & operations", icon: Database }];
 
 export const isStaff = (role: Role | null | undefined) => role === "judge" || role === "admin";
 export const homeFor = (role: Role | null | undefined) => (role === "customer" ? "/home" : role === "admin" ? "/accounts" : "/judge");
 export const navFor = (role: Role | null | undefined) => (role === "customer" ? CUSTOMER : STAFF);
-export const moreFor = (role: Role | null | undefined) => (role === "customer" ? CUSTOMER_MORE : STAFF_MORE);
+export const moreFor = (role: Role | null | undefined) => [
+  ...(role === "customer" ? CUSTOMER_MORE : STAFF_MORE),
+  { href: "/alerts", label: "Notifications", icon: Bell },
+  ...(role === "judge" ? [{ href: "/admin", label: "Dataset status", icon: Database }] : []),
+];
 
 /** Phone bottom tabs (iOS tab-bar pattern): three top-level pages + "More". `match` lights a tab for pages reached from it. */
 export function tabsFor(role: Role | null | undefined): NavItem[] {

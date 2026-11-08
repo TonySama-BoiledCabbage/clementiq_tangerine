@@ -4,6 +4,9 @@ import Link from "next/link";
 import { Bell, CheckCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Alert } from "@clementiq/shared-types";
+import { useSession } from "@/lib/store";
+import { alertLink } from "./links";
+import { ErrorState } from "@/components/ui/misc";
 import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/format";
 import { useAlerts, useMarkAlert, useSettings } from "@/lib/hooks";
@@ -11,7 +14,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/compon
 import { SeverityBadge } from "./SeverityBadge";
 
 export function NotificationCenter() {
-  const { data } = useAlerts({ limit: 8 });
+  const role = useSession((s) => s.role);
+  const { data, error } = useAlerts({ limit: 8 });
   const settings = useSettings();
   const mark = useMarkAlert();
   const qc = useQueryClient();
@@ -32,29 +36,30 @@ export function NotificationCenter() {
   const unread = data?.unread ?? 0;
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger aria-label={`Notifications, ${unread} unread`} className="relative cursor-pointer rounded-full p-2 text-white hover:bg-white/15">
+      <DropdownMenuTrigger aria-label={`Notifications, ${unread} unread`} className="relative grid min-h-11 min-w-11 cursor-pointer place-items-center rounded-full text-ink hover:bg-press">
         <Bell className="size-5" />
-        {unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-white px-1 text-[10px] font-bold text-tangerine">{unread > 99 ? "99+" : unread}</span>}
+        {unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-white px-1 text-xs font-bold text-tangerine">{unread > 99 ? "99+" : unread}</span>}
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[min(92vw,380px)] p-0">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <p className="text-sm font-semibold">Notifications</p>
-          <button className="flex cursor-pointer items-center gap-1 text-xs font-semibold text-tangerine disabled:opacity-40" disabled={!unread}
+          <button className="flex min-h-11 cursor-pointer items-center gap-1 text-xs font-semibold text-tangerine disabled:opacity-40" disabled={!unread}
             onClick={async () => { await api("/alerts/read-all", { method: "POST" }); qc.invalidateQueries({ queryKey: ["alerts"] }); }}>
             <CheckCheck className="size-3.5" /> Mark all read
           </button>
         </div>
         <ul className="max-h-96 overflow-y-auto">
-          {!data?.items.length && <li className="p-6 text-center text-xs text-ink-2">No alerts yet. Alerts appear when Clement Core detects something relevant to you.</li>}
+          {error && <li className="p-3"><ErrorState error={error} /></li>}
+          {!error && !data?.items.length && <li className="p-6 text-center text-xs text-ink-2">No alerts yet. Alerts appear when Clement Core detects something relevant to you.</li>}
           {data?.items.map((a: Alert) => (
             <li key={a.id} className={`border-b border-line px-4 py-3 last:border-0 ${a.is_read ? "" : "bg-peach/50"}`}>
               <div className="flex items-start justify-between gap-2">
-                <Link href={a.simulation_link || "/alerts"} className="text-[13px] font-semibold leading-snug hover:text-tangerine"
+                <Link href={alertLink(a, role)} className="text-[13px] font-semibold leading-snug hover:text-tangerine"
                   onClick={() => !a.is_read && mark.mutate({ id: a.id, is_read: true })}>{a.title}</Link>
                 <SeverityBadge s={a.severity} />
               </div>
               <p className="mt-1 line-clamp-2 text-xs text-ink-2">{a.relevance}</p>
-              <p className="mt-1 text-[10px] text-ink-3">{a.source} · {timeAgo(a.created_at)}</p>
+              <p className="mt-1 text-xs text-ink-3">{a.source} · {timeAgo(a.created_at)}</p>
             </li>
           ))}
         </ul>
