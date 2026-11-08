@@ -13,4 +13,6 @@ if __name__ == "__main__":
         raise SystemExit("Set the dedicated PostgreSQL DATABASE_URL before deploying the API")
     cmd_migrate(None)
     result = run_import()
+    if any(item.get("status") == "failed" for item in result["datasets"].values()) or "error" in result.get("derived", {}):
+        raise SystemExit("Database import failed; deployment stopped. Check import logs.")
     print("ClementIQ persistent database prepared")
