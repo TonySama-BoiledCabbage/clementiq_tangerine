@@ -68,9 +68,10 @@ def _attention(db: Session) -> tuple[pd.DataFrame, int]:
         if _attention_cache.get("fp") == fp:
             return _attention_cache["data"]
         eng = db.get_bind()
+        B = models.AccountBaseline
         data = compute_attention(
-            pd.read_sql("SELECT account_id, income_I, spending_S, buffer_B, loan_payment_P, last_month, runway_ei55 "
-                        "FROM account_baselines", eng),
+            pd.read_sql(select(B.account_id, B.income_I, B.spending_S, B.buffer_B,
+                               B.loan_payment_P, B.last_month, B.runway_ei55), eng),
             pd.read_sql("SELECT account_id, month, month_end_balance FROM monthly_summaries", eng),
             pd.read_sql("SELECT account_id, amount, purpose FROM standing_orders", eng),
             pd.read_sql("SELECT account_id, status, monthly_payment FROM loans", eng),
