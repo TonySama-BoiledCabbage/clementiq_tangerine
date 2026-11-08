@@ -33,11 +33,14 @@ DEFAULT_PREFS: dict[str, Any] = {
     "dashboard": {"layout_density": "balanced", "features": {}, "favorites": [], "order": []},
     "appearance": {"theme": "system", "orchard_enabled": True, "money_trees": True, "floating_coins": True,
                    "animations": True, "animation_intensity": "medium", "orchard_style": "illustrated",
-                   "growth_visuals": True},
+                   "growth_visuals": True, "show_personal_character": True},
+    # Accessibility & Comfort (all opt-in; the OS reduce-motion setting is always respected too)
+    "accessibility": {"text_size": "default", "high_contrast": False, "simple_mode": False, "chart_tables": False,
+                      "read_aloud": False, "read_amounts": False, "enhanced_focus": False, "calm_mode": False},
     # character: which figure sits in the orchard — the default illustration, the user's own photo
     # as a framed portrait (no AI), or a consented AI-generated character.
     "avatar": {"generation_consent": False, "consent_at": None, "personalized_enabled": False, "character": "default"},
-    "privacy": {"personalized_ai": True, "optional_ai_insights": True},
+    "privacy": {"personalized_ai": True, "optional_ai_insights": True, "mask_balances": False},
 }
 
 FEATURE_ID = r"^[a-zA-Z][a-zA-Z0-9_]{1,40}$"
@@ -77,6 +80,18 @@ class AppearancePrefs(BaseModel):
     animation_intensity: Literal["low", "medium", "high"] | None = None
     orchard_style: Literal["illustrated", "photo"] | None = None
     growth_visuals: bool | None = None
+    show_personal_character: bool | None = None
+
+
+class AccessibilityPrefs(BaseModel):
+    text_size: Literal["default", "large", "x-large"] | None = None
+    high_contrast: bool | None = None
+    simple_mode: bool | None = None
+    chart_tables: bool | None = None
+    read_aloud: bool | None = None
+    read_amounts: bool | None = None
+    enhanced_focus: bool | None = None
+    calm_mode: bool | None = None
 
 
 class AvatarPrefs(BaseModel):
@@ -88,6 +103,7 @@ class AvatarPrefs(BaseModel):
 class PrivacyPrefs(BaseModel):
     personalized_ai: bool | None = None
     optional_ai_insights: bool | None = None
+    mask_balances: bool | None = None
 
 
 class PrefsPatch(BaseModel):
@@ -101,6 +117,7 @@ class PrefsPatch(BaseModel):
     appearance: AppearancePrefs | None = None
     avatar: AvatarPrefs | None = None
     privacy: PrivacyPrefs | None = None
+    accessibility: AccessibilityPrefs | None = None
 
 
 def merge_prefs(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:

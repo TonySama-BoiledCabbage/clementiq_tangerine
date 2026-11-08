@@ -20,6 +20,8 @@ import { AccountSearch } from "@/components/layout/CustomerSelector";
 import { FinancialImpactSummary, ShockScenarioSelector } from "@/components/finance/Shock";
 import { ScenarioComparisonChart } from "@/components/finance/Charts";
 import { AIInsightCard } from "@/components/ai/AIInsightCard";
+import { ExportReportButton } from "@/components/reports/ExportReportButton";
+import { ReadAloud } from "@/components/ui/comfort";
 
 const STEPS = [
   { id: "step-1", n: "1", label: "Customer" },
@@ -63,7 +65,7 @@ function Tile({ label, value, sub }: { label: string; value: string; sub?: strin
     <div className="rounded-2xl border border-line bg-cream p-3">
       <dt className="text-xs font-medium text-ink-2">{label}</dt>
       <dd className="tabular text-lg font-bold text-ink">{value}</dd>
-      {sub && <dd className="text-[11px] text-ink-3">{sub}</dd>}
+      {sub && <dd className="text-[0.6875rem] text-ink-3">{sub}</dd>}
     </div>
   );
 }
@@ -144,7 +146,7 @@ function JudgeWalkthrough() {
               <button onClick={() => goTo(st.id)} aria-current={active === st.id ? "step" : undefined}
                 className={cn("inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-xl px-3 text-sm font-semibold transition",
                   active === st.id ? "bg-tangerine text-white shadow-sm" : "text-ink-2 hover:bg-peach hover:text-ink")}>
-                <span className={cn("grid size-5 place-items-center rounded-full text-[11px]", active === st.id ? "bg-white/25" : "bg-peach text-tangerine")}>{st.n}</span>{st.label}
+                <span className={cn("grid size-5 place-items-center rounded-full text-[0.6875rem]", active === st.id ? "bg-white/25" : "bg-peach text-tangerine")}>{st.n}</span>{st.label}
               </button>
               {i < STEPS.length - 1 && <span className="text-ink-3" aria-hidden>→</span>}
             </li>
@@ -193,7 +195,7 @@ function JudgeWalkthrough() {
       <StepCard id="step-3" n="3" title="See the New Numbers" subtitle="Baseline versus after the twist, in plain language, a table and a chart.">
         {!ready ? <p className="text-sm text-ink-2">Choose an account in Step 1 first.</p> : sim.error ? <ErrorState error={sim.error} /> : !sim.data || !sc || !j ? <Skeleton className="h-72" /> : (
           <div className="space-y-6">
-            <p className="rounded-2xl bg-peach p-4 text-[15px] leading-relaxed text-ink" role="status">
+            <p className="rounded-2xl bg-peach p-4 text-[0.9375rem] leading-relaxed text-ink" role="status">
               After this twist, monthly income goes from <b>{money(sim.data.baseline.income)}</b> to <b>{money(sc.income)}</b> and spending from <b>{money(sim.data.baseline.spending)}</b> to <b>{money(sc.spending)}</b>
               {sc.one_off_costs > 0 && <>, with a one-off cost of <b>{money(sc.one_off_costs)}</b> taken from the buffer</>}.{" "}
               {sc.gap > 0 ? <>That leaves a monthly shortfall of <b>{money(sc.gap)}</b>, so the buffer of <b>{money(sc.buffer_left)}</b> lasts <b>{sc.runway.display} months</b> (it was {sim.data.baseline.runway.display}).</>
@@ -284,7 +286,8 @@ function JudgeWalkthrough() {
               </div>
             </dl>
             <div>
-              <p className="font-semibold text-ink">Key takeaways</p>
+              <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-semibold text-ink">Key takeaways</p>
+                <ReadAloud text={`Account ${accountId}. ${presetName}. Runway changes from ${j.runway.display} to ${sc.runway.display}. ${verdict?.text ?? ""} Top recommendation: ${backup.data.immediate_actions[0]?.action ?? ""}`} label="Read summary" /></div>
               <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-ink">
                 <li>Runway changes from {j.runway.display} to {sc.runway.display} {sc.runway.no_shortfall ? "" : "months"}{verdict ? `, and ${verdict.survives ? "the customer makes it" : "the customer falls short"} over the ${verdict.required_months}-month twist` : ""}.</li>
                 <li>{sc.gap > 0 ? `The new monthly shortfall is ${money(sc.gap)}.` : "Income still covers spending after the twist."}</li>
@@ -297,6 +300,7 @@ function JudgeWalkthrough() {
               <Button onClick={() => goTo("step-2", "button")}><Shuffle /> Try Another Scenario</Button>
               <Button variant="outline" onClick={() => goTo("step-1", "input[role=combobox]")}><Search /> Choose Another Account</Button>
               <Button variant="ghost" onClick={() => { setComponents(DEFAULT_TWIST); window.scrollTo({ top: 0, behavior: "smooth" }); }}><RotateCcw /> Restart Demo</Button>
+              <ExportReportButton report="judge" accountId={accountId} shock={shock} label="Download Report" />
             </div>
           </div>
         )}

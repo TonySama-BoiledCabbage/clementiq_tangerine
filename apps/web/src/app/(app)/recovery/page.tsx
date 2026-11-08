@@ -18,6 +18,8 @@ import { EmergencySavingsProgress, RecoveryPlanChecklist } from "@/components/fi
 import { ChartTooltip, Legend, SERIES, axisProps, gridProps } from "@/components/finance/chart-kit";
 import { AIInsightCard } from "@/components/ai/AIInsightCard";
 import { FinancialRunwayGauge } from "@/components/finance/Gauges";
+import { ExportReportButton } from "@/components/reports/ExportReportButton";
+import { ReadAloud } from "@/components/ui/comfort";
 
 interface GoalPlan {
   computed_at: string; current_buffer: number; target: number; target_basis: string; gap: number; progress_pct: number; monthly_surplus: number;
@@ -62,13 +64,14 @@ function GoalTab({ accountId }: { accountId: number }) {
           <>
             <Card>
               <CardHeader><div><CardTitle>Goal Plan</CardTitle><CardDescription>{g.target_basis}</CardDescription></div>
+                <ExportReportButton report="recovery" accountId={accountId} goal={body} />
                 <Badge tone={g.status === "reached" ? "good" : g.status === "no_capacity" ? "bad" : "orange"}>{g.status.replace("_", " ")}</Badge></CardHeader>
               <CardContent className="space-y-4">
                 <EmergencySavingsProgress current={g.current_buffer} target={g.target} milestones={g.milestones} />
                 <div className="grid gap-3 sm:grid-cols-4">
                   {[["Remaining gap", money(g.gap)], ["Monthly surplus", money(g.monthly_surplus)], ["Recommended / month", money(g.recommended_monthly_contribution)],
                     ["Time to goal", g.months_to_goal === null ? "—" : g.months_to_goal === 0 ? "Reached" : `${g.months_to_goal} months`]].map(([k, v]) => (
-                    <div key={k} className="rounded-xl bg-cream p-3"><p className="text-[11px] text-ink-2">{k}</p><p className="tabular text-lg font-bold">{v}</p></div>
+                    <div key={k} className="rounded-xl bg-cream p-3"><p className="text-[0.6875rem] text-ink-2">{k}</p><p className="tabular text-lg font-bold">{v}</p></div>
                   ))}
                 </div>
                 {g.deadline && <p className={`rounded-xl p-3 text-xs ${g.deadline.achievable_with_current_settings ? "bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-200" : "bg-amber-50 text-amber-900 dark:bg-amber-950 dark:text-amber-200"}`}>
@@ -94,7 +97,7 @@ function GoalTab({ accountId }: { accountId: number }) {
                     <div key={r.category}><p className="text-sm font-semibold">{r.label} <span className="text-xs font-normal text-ink-2">· typical {money(r.monthly_median)}/mo</span></p>
                       <div className="mt-1 flex flex-wrap gap-1.5">{r.options.map((o) => <Badge key={o.cut_pct} tone="orange">−{o.cut_pct}% → {money(o.monthly_saving)}/mo</Badge>)}</div></div>
                   )) : <p className="text-xs text-ink-2">No discretionary outflows found to trim.</p>}
-                  <ul className="pt-2 text-[11px] text-ink-3">{g.assumptions.map((a) => <li key={a}>• {a}</li>)}</ul>
+                  <ul className="pt-2 text-[0.6875rem] text-ink-3">{g.assumptions.map((a) => <li key={a}>• {a}</li>)}</ul>
                 </CardContent>
               </Card>
               <AIInsightCard title="Explain this Goal Plan" endpoint="/ai/explain-plan" kind="plan" key={JSON.stringify(body)}
@@ -131,7 +134,9 @@ function BackupTab({ accountId }: { accountId: number }) {
                 <p className="mt-2 text-center text-xs text-ink-2">Shortfall {money(b.monthly_shortfall)}/mo · best modeled option adds <b>{b.runway_improvement_months.toFixed(1)}</b> months</p>
               </Card>
               <Card>
-                <CardHeader><div><CardTitle>Immediate actions</CardTitle><CardDescription>Your Backup Plan checklist</CardDescription></div></CardHeader>
+                <CardHeader><div><CardTitle>Immediate actions</CardTitle><CardDescription>Your Backup Plan checklist</CardDescription></div>
+                  <div className="flex flex-wrap gap-2"><ReadAloud text={b.immediate_actions.map((a, i) => `${i + 1}. ${a.action}. ${a.why}`).join(" ")} label="Read actions" />
+                  <ExportReportButton report="recovery" accountId={accountId} shock={shock} /></div></CardHeader>
                 <CardContent><RecoveryPlanChecklist id={`backup-${accountId}`} items={b.immediate_actions} /></CardContent>
               </Card>
             </div>
@@ -169,9 +174,9 @@ function BackupTab({ accountId }: { accountId: number }) {
               <Card>
                 <CardHeader><div><CardTitle>Priority expenses & obligations</CardTitle><CardDescription>Keep these current first</CardDescription></div></CardHeader>
                 <CardContent><ul className="divide-y divide-line">{b.priority_expenses.map((p) => (
-                  <li key={p.item} className="flex items-center justify-between py-2 text-sm"><span>{p.item} <Badge tone={p.priority === "essential" ? "bad" : p.priority === "contractual" ? "violet" : "neutral"}>{p.priority}</Badge><span className="block text-[11px] text-ink-3">{p.basis}</span></span><span className="tabular font-semibold">{money(p.monthly)}</span></li>
+                  <li key={p.item} className="flex items-center justify-between py-2 text-sm"><span>{p.item} <Badge tone={p.priority === "essential" ? "bad" : p.priority === "contractual" ? "violet" : "neutral"}>{p.priority}</Badge><span className="block text-[0.6875rem] text-ink-3">{p.basis}</span></span><span className="tabular font-semibold">{money(p.monthly)}</span></li>
                 ))}</ul>
-                <p className="mt-2 text-[11px] text-ink-3">{b.disclaimer}</p></CardContent>
+                <p className="mt-2 text-[0.6875rem] text-ink-3">{b.disclaimer}</p></CardContent>
               </Card>
               <AIInsightCard title="Explain this Backup Plan" endpoint="/ai/explain-plan" kind="plan" key={JSON.stringify(shock)} body={{ account_id: accountId, plan_type: "backup", shock }} />
             </div>

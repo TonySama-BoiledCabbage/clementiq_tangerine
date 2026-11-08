@@ -17,6 +17,7 @@ import { PageHeader } from "@/components/layout/PageKit";
 import { AddHoldingForm, InvestmentHoldingCard, PortfolioAllocationChart } from "@/components/invest/Investments";
 import { ShockParameterSlider } from "@/components/finance/Shock";
 import { ChartTooltip, SERIES, axisProps } from "@/components/finance/chart-kit";
+import { ExportReportButton } from "@/components/reports/ExportReportButton";
 
 interface Portfolio {
   holdings: Holding[]; total_value: number; total_gain: number | null; allocation: { asset_class: string; value: number; weight: number }[];
@@ -53,7 +54,8 @@ export default function InvestmentsPage() {
     <div className="space-y-6">
       <PageHeader title="Investments & Stocks" subtitle="Portfolio exposure and stress tests — kept separate from your emergency buffer"
         right={<><Button variant="outline" onClick={() => prices.mutate()} disabled={prices.isPending}>{prices.isPending ? <Spinner /> : <RefreshCw />} Refresh prices</Button>
-          <Button variant="secondary" onClick={() => demo.mutate()} disabled={demo.isPending}><Database /> Load demo portfolio</Button></>} />
+          <Button variant="secondary" onClick={() => demo.mutate()} disabled={demo.isPending}><Database /> Load demo portfolio</Button>
+          <ExportReportButton report="investments" /></>} />
       <p className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200">{p?.notice ?? "The Tangerine dataset contains no investment holdings."} No trades are ever executed; scenarios are hypothetical, not predictions.</p>
       {pf.error && <ErrorState error={pf.error} />}
       {pf.isLoading && <Skeleton className="h-64" />}
@@ -62,12 +64,12 @@ export default function InvestmentsPage() {
           <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3">
               <Card className="p-4"><p className="text-xs text-ink-2">Portfolio value</p><p className="tabular text-2xl font-bold">{money(p.total_value)}</p><div className="mt-1 flex flex-wrap gap-1">{p.holding_kinds.map((k) => <Badge key={k} tone={k === "demo" ? "warn" : "violet"}>{k}</Badge>)}</div></Card>
-              <Card className="p-4"><p className="text-xs text-ink-2">Gain / loss</p><p className={`tabular text-2xl font-bold ${(p.total_gain ?? 0) >= 0 ? "text-good" : "text-bad"}`}>{p.total_gain !== null ? signedMoney(p.total_gain) : "—"}</p><p className="text-[11px] text-ink-3">where cost basis is known</p></Card>
-              <Card className="p-4"><p className="text-xs text-ink-2">Concentration</p><p className="text-2xl font-bold capitalize">{p.concentration.flag}</p><p className="text-[11px] text-ink-3">Top {p.concentration.top_holding ?? "—"} {pct(p.concentration.top_weight)} · HHI {p.concentration.hhi.toFixed(2)}</p></Card>
+              <Card className="p-4"><p className="text-xs text-ink-2">Gain / loss</p><p className={`tabular text-2xl font-bold ${(p.total_gain ?? 0) >= 0 ? "text-good" : "text-bad"}`}>{p.total_gain !== null ? signedMoney(p.total_gain) : "—"}</p><p className="text-[0.6875rem] text-ink-3">where cost basis is known</p></Card>
+              <Card className="p-4"><p className="text-xs text-ink-2">Concentration</p><p className="text-2xl font-bold capitalize">{p.concentration.flag}</p><p className="text-[0.6875rem] text-ink-3">Top {p.concentration.top_holding ?? "—"} {pct(p.concentration.top_weight)} · HHI {p.concentration.hhi.toFixed(2)}</p></Card>
             </div>
             {!p.holdings.length ? <EmptyState title="No holdings yet">Add a holding on the right, or load the clearly labelled demo portfolio.</EmptyState> : <>
               <Card><CardHeader><div><CardTitle>Asset allocation</CardTitle></div></CardHeader><CardContent><PortfolioAllocationChart allocation={p.allocation} />
-                {p.missing_prices.length > 0 && <p className="text-[11px] text-warn">No price for {p.missing_prices.join(", ")} — excluded from value (never estimated).</p>}</CardContent></Card>
+                {p.missing_prices.length > 0 && <p className="text-[0.6875rem] text-warn">No price for {p.missing_prices.join(", ")} — excluded from value (never estimated).</p>}</CardContent></Card>
               {firstSeries && <Card><CardHeader><div><CardTitle>Price history · {firstSeries[0]}</CardTitle><CardDescription>Stored market observations ({firstSeries[1].length})</CardDescription></div></CardHeader>
                 <CardContent><ResponsiveContainer width="100%" height={180}><LineChart data={firstSeries[1]}><XAxis dataKey="t" tickFormatter={(t) => t.slice(5, 10)} {...axisProps} /><YAxis domain={["auto", "auto"]} {...axisProps} width={60} /><Tooltip content={<ChartTooltip fmt={(v) => money(v, true)} labelFmt={(l) => l.slice(0, 16)} />} /><Line dataKey="price" name="Price" stroke={SERIES.invest} dot={false} strokeWidth={2} /></LineChart></ResponsiveContainer></CardContent></Card>}
               <div className="space-y-2">{p.holdings.map((h) => <InvestmentHoldingCard key={h.id} h={h} onDelete={() => h.id && del.mutate(h.id)} />)}</div>
@@ -89,7 +91,7 @@ export default function InvestmentsPage() {
                       <p>Liquid buffer {money(stress.data.broader_position.liquid_buffer)} · EI-55% runway <b>{stress.data.broader_position.runway_liquid_only?.display ?? "no shortfall"}</b></p>
                       {stress.data.broader_position.runway_with_investments && <p>If investments were sold: <b>{stress.data.broader_position.runway_with_investments.display}</b> months</p>}
                       <p className="text-ink-3">{stress.data.broader_position.note}</p></div>}
-                    <p className="text-[10px] text-ink-3">{stress.data.label}</p>
+                    <p className="text-[0.625rem] text-ink-3">{stress.data.label}</p>
                   </>}
                 </CardContent></Card>
             )}

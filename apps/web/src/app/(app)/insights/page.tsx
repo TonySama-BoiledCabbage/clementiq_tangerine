@@ -55,7 +55,7 @@ export default function InsightsPage() {
           <p className="text-xs text-ink-3">n = {d.n_accounts.toLocaleString()} accounts · computed in {d.compute_seconds}s · <EngineBadge engine="clement-core" /></p>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {d.findings.map((f) => (
-              <Card key={f.id} className="p-4"><Lightbulb className="mb-2 size-5 text-tangerine" /><p className="font-semibold leading-snug">{f.title}</p><p className="mt-1 text-sm text-ink-2">{f.text}</p><p className="mt-2 text-[10px] text-ink-3">n = {f.n.toLocaleString()}</p></Card>
+              <Card key={f.id} className="p-4"><Lightbulb className="mb-2 size-5 text-tangerine" /><p className="font-semibold leading-snug">{f.title}</p><p className="mt-1 text-sm text-ink-2">{f.text}</p><p className="mt-2 text-[0.625rem] text-ink-3">n = {f.n.toLocaleString()}</p></Card>
             ))}
           </div>
           <div className="grid gap-4 xl:grid-cols-2">

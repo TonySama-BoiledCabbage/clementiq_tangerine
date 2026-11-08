@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 from .config import get_settings
 from .db import Base, get_engine
 from .ratelimit import RateLimitMiddleware
-from .routers import accounts, ai, alerts, insights, investments, profile, scenarios, solana, system, worldpulse
+from .routers import accounts, ai, alerts, insights, investments, profile, reports, scenarios, solana, system, worldpulse
 
 
 class _RedactFilter(logging.Filter):
@@ -60,7 +60,7 @@ def create_app() -> FastAPI:
         logging.getLogger("clementiq").exception("unhandled error on %s", request.url.path)
         return JSONResponse({"detail": "internal error"}, status_code=500)
 
-    for r in (system, accounts, scenarios, worldpulse, investments, solana, ai, alerts, insights, profile):
+    for r in (system, accounts, scenarios, worldpulse, investments, solana, ai, alerts, insights, profile, reports):
         app.include_router(r.router)
     return app
 

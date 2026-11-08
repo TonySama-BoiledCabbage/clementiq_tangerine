@@ -18,8 +18,8 @@ export const GRID: Record<Density, string> = {
 
 const SIZE: Record<Density, { pad: string; art: number; title: string; desc: string }> = {
   minimal: { pad: "p-7 min-h-64", art: 104, title: "text-xl", desc: "text-sm" },
-  balanced: { pad: "p-5 min-h-56", art: 80, title: "text-[17px]", desc: "text-[13px]" },
-  compact: { pad: "p-3.5 min-h-40", art: 52, title: "text-sm", desc: "text-[11px] line-clamp-2" },
+  balanced: { pad: "p-5 min-h-56", art: 80, title: "text-[1.0625rem]", desc: "text-[0.8125rem]" },
+  compact: { pad: "p-3.5 min-h-40", art: 52, title: "text-sm", desc: "text-[0.6875rem] line-clamp-2" },
 };
 
 export function FeatureCard({ f, density, favorite, onToggleFavorite, arranging, dragHandle }: {

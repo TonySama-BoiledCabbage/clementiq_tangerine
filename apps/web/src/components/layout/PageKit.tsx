@@ -7,7 +7,7 @@ import { CustomerSelector } from "./CustomerSelector";
 export function PageHeader({ title, subtitle, computedAt, right }: { title: string; subtitle?: React.ReactNode; computedAt?: string; right?: React.ReactNode }) {
   return (
     <SectionTitle title={title}
-      subtitle={<>{subtitle}{computedAt && <span className="block text-[11px] text-ink-3">Last updated {dateTime(computedAt)} · Clement Core</span>}</>}
+      subtitle={<>{subtitle}{computedAt && <span className="block text-[0.6875rem] text-ink-3">Last updated {dateTime(computedAt)} · Clement Core</span>}</>}
       right={<div className="flex flex-wrap items-center gap-2">{right}<CustomerSelector /></div>} />
   );
 }

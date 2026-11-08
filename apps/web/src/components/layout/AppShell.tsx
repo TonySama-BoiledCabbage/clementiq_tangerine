@@ -1,6 +1,8 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { setMoneyMask } from "@/lib/format";
+import { useComfort } from "@/lib/hooks";
 import { useSession } from "@/lib/store";
 import { Skeleton } from "@/components/ui/misc";
 import { ThemeSync, WorkspaceTopBar } from "./AppChrome";
@@ -11,6 +13,7 @@ import { ThemeSync, WorkspaceTopBar } from "./AppChrome";
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const token = useSession((s) => s.token);
+  const comfort = useComfort();
   const expiresAt = useSession((s) => s.expiresAt);
   const logout = useSession((s) => s.logout);
   const router = useRouter();
@@ -34,12 +37,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const isHome = path === "/";
+  // Privacy mode is applied before any page renders, so masked values never reach the DOM.
+  setMoneyMask(comfort.mask);
   return (
     <div className="min-h-screen">
       <ThemeSync />
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2">Skip to content</a>
       {!isHome && <WorkspaceTopBar />}
-      <main id="main" className={isHome ? "" : "mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8"}>
+      <main id="main" key={comfort.mask ? "masked" : "visible"} className={isHome ? "" : "mx-auto max-w-[1500px] px-4 py-6 sm:px-6 lg:px-8"}>
         <Suspense fallback={<Skeleton className="h-96" />}>{children}</Suspense>
       </main>
     </div>

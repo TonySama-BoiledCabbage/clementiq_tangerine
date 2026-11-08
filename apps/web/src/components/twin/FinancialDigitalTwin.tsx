@@ -39,11 +39,11 @@ export function FinancialDigitalTwin({ summary, sim }: { summary: Summary; sim?:
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <Legend items={[{ label: "Actual balance", color: "#16a34a" }, { label: "Shock projection", color: "#ff6b00" }, { label: "Income", color: SERIES.income }, { label: "Spending", color: SERIES.spending }]} />
-        <div className="flex gap-1 rounded-xl bg-peach p-1 text-[11px] font-semibold">
+        <div className="flex gap-1 rounded-xl bg-peach p-1 text-[0.6875rem] font-semibold">
           {(["3d", "2d"] as const).map((v) => <button key={v} disabled={v === "3d" && !allow3d} onClick={() => setView(v)} aria-pressed={view === v} className={`cursor-pointer rounded-lg px-2 py-1 ${view === v ? "bg-surface text-tangerine" : "text-ink-2"} disabled:opacity-40`}>{v.toUpperCase()}</button>)}
         </div>
       </div>
-      {!allow3d && <p className="text-[11px] text-ink-3">3D is off ({!webgl ? "WebGL unavailable" : reduced ? "reduced motion preferred" : "disabled in Settings"}) — showing the 2D view.</p>}
+      {!allow3d && <p className="text-[0.6875rem] text-ink-3">3D is off ({!webgl ? "WebGL unavailable" : reduced ? "reduced motion preferred" : "disabled in Settings"}) — showing the 2D view.</p>}
       <div className="h-[380px] w-full overflow-hidden rounded-2xl border border-line bg-cream">
         {show3d ? <TwinScene points={points} target={target} selected={sel} onSelect={setSel} /> : (
           <ResponsiveContainer width="100%" height="100%">

@@ -139,3 +139,34 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 }
 /* User-selected "Reduced motion" in Settings (in addition to the OS preference). */
 :root[data-reduced-motion="true"] *, :root[data-reduced-motion="true"] *::before, :root[data-reduced-motion="true"] *::after { animation: none !important; transition: none !important; }
+
+/* ───────────── Accessibility & Comfort (set on <html> from the user's preferences) ───────────── */
+:root[data-text-size="large"] { font-size: 112.5%; }
+:root[data-text-size="x-large"] { font-size: 125%; }
+
+/* High contrast: solid surfaces, darker text and borders (light and dark themes). */
+:root[data-contrast="high"] {
+  --ink: #000000; --ink-2: #1f2937; --ink-3: #374151; --line: #6b7280;
+  --surface: #ffffff; --page: #ffffff; --cream: #ffffff; --peach: #ffe2cc; --tangerine: #c2410c;
+}
+:root[data-contrast="high"][data-theme="dark"] {
+  --ink: #ffffff; --ink-2: #f3f4f6; --ink-3: #e5e7eb; --line: #9ca3af;
+  --surface: #000000; --page: #000000; --cream: #111111; --peach: #3b1d0a; --tangerine: #fb923c;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-contrast="high"]:not([data-theme="light"]) {
+    --ink: #ffffff; --ink-2: #f3f4f6; --ink-3: #e5e7eb; --line: #9ca3af;
+    --surface: #000000; --page: #000000; --cream: #111111; --peach: #3b1d0a; --tangerine: #fb923c;
+  }
+}
+:root[data-contrast="high"] .glass { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
+:root[data-contrast="high"] .border-line, :root[data-contrast="high"] .border { border-color: var(--line); }
+
+/* Enhanced keyboard focus: thick, two-tone outline that is visible on any background. */
+:root[data-focus="enhanced"] :focus-visible { outline: 4px solid #1d4ed8 !important; outline-offset: 3px !important; box-shadow: 0 0 0 7px #ffffff !important; }
+
+/* Calm mode: softer status colours (labels and icons still convey meaning). */
+:root[data-calm="true"] { --bad: #b45309; }
+
+/* Simple mode and calm mode helpers. */
+:root[data-simple="true"] .simple-hide { display: none !important; }

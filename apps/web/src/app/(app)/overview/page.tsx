@@ -15,6 +15,7 @@ import { FinancialMetricCard } from "@/components/finance/FinancialMetricCard";
 import { NetWorthChart } from "@/components/finance/Charts";
 import { FinancialRunwayGauge, ResilienceScoreGauge } from "@/components/finance/Gauges";
 import { EngineBadge } from "@/components/finance/EngineBadge";
+import { ExportReportButton } from "@/components/reports/ExportReportButton";
 
 function greeting() {
   const h = new Date().getHours();
@@ -43,7 +44,7 @@ export default function OverviewPage() {
     <div className="space-y-6">
       <PageHeader title={accountId ? `${greeting()} 👋` : "Welcome to ClementIQ"}
         subtitle={accountId ? <>Here’s the financial picture for account <b>#{accountId}</b>{s && <> · data through {s.data_as_of}</>}</> : "Your Daily Dose of Financial Intelligence"}
-        computedAt={s?.computed_at} />
+        computedAt={s?.computed_at} right={<ExportReportButton report="snapshot" accountId={accountId} />} />
       {!accountId && <NeedAccount />}
       {error && <ErrorState error={error} retry={refetch} />}
       {accountId && isLoading && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-36" />)}</div>}
@@ -70,7 +71,7 @@ export default function OverviewPage() {
                 <ResilienceScoreGauge score={s.resilience.score} band={s.resilience.band} />
                 <div className="w-full space-y-1.5">
                   {s.resilience.breakdown.slice(0, 4).map((b) => (
-                    <div key={b.key}><div className="flex justify-between text-[11px]"><span className="text-ink-2">{b.label}</span><span className="tabular font-semibold">{b.points.toFixed(0)}/{b.max_points.toFixed(0)}</span></div><Progress value={b.score * 100} label={b.label} /></div>
+                    <div key={b.key}><div className="flex justify-between text-[0.6875rem]"><span className="text-ink-2">{b.label}</span><span className="tabular font-semibold">{b.points.toFixed(0)}/{b.max_points.toFixed(0)}</span></div><Progress value={b.score * 100} label={b.label} /></div>
                   ))}
                 </div>
                 <Button asChild variant="link" size="sm"><Link href="/resilience">Full breakdown <ArrowRight /></Link></Button>
@@ -120,7 +121,7 @@ export default function OverviewPage() {
               {events.data?.items.length ? (
                 <ul className="divide-y divide-line">{events.data.items.slice(0, 4).map((e) => (
                   <li key={e.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
-                    <div className="min-w-0"><p className="truncate text-sm font-medium">{e.headline}</p><p className="text-[11px] text-ink-2">{e.source_name} · {timeAgo(e.published_at)} · {e.topic_label}</p></div>
+                    <div className="min-w-0"><p className="truncate text-sm font-medium">{e.headline}</p><p className="text-[0.6875rem] text-ink-2">{e.source_name} · {timeAgo(e.published_at)} · {e.topic_label}</p></div>
                     <Button asChild size="sm" variant="outline"><Link href={`/worldpulse?event=${e.id}&topic=${e.topic}`}>Simulate impact</Link></Button>
                   </li>
                 ))}</ul>

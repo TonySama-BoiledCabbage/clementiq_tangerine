@@ -141,7 +141,8 @@ export interface SettingsResponse {
     dashboard: import("./features").DashboardPrefs;
     appearance: Appearance;
     avatar: { generation_consent: boolean; consent_at: string | null; personalized_enabled: boolean; character?: "default" | "photo" | "generated" };
-    privacy: { personalized_ai: boolean; optional_ai_insights: boolean };
+    privacy: { personalized_ai: boolean; optional_ai_insights: boolean; mask_balances?: boolean };
+    accessibility?: Partial<Accessibility>;
   };
   integrations: Record<string, boolean | string>;
 }
@@ -154,11 +155,30 @@ export function useSettings() {
 export interface Appearance {
   theme: "light" | "dark" | "system"; orchard_enabled: boolean; money_trees: boolean; floating_coins: boolean;
   animations: boolean; animation_intensity: "low" | "medium" | "high"; orchard_style: "illustrated" | "photo"; growth_visuals: boolean;
+  show_personal_character: boolean;
+}
+
+export interface Accessibility {
+  text_size: "default" | "large" | "x-large"; high_contrast: boolean; simple_mode: boolean; chart_tables: boolean;
+  read_aloud: boolean; read_amounts: boolean; enhanced_focus: boolean; calm_mode: boolean;
+}
+
+export const DEFAULT_ACCESSIBILITY: Accessibility = {
+  text_size: "default", high_contrast: false, simple_mode: false, chart_tables: false,
+  read_aloud: false, read_amounts: false, enhanced_focus: false, calm_mode: false,
+};
+
+/** Comfort preferences for components (read aloud, simple/calm modes, chart tables, privacy mask). */
+export function useComfort(): Accessibility & { mask: boolean } {
+  const s = useSettings();
+  const p = s.data?.preferences;
+  return { ...DEFAULT_ACCESSIBILITY, ...(p?.accessibility ?? {}), mask: !!p?.privacy?.mask_balances };
 }
 
 export const DEFAULT_APPEARANCE: Appearance = {
   theme: "system", orchard_enabled: true, money_trees: true, floating_coins: true, animations: true,
   animation_intensity: "medium", orchard_style: "illustrated", growth_visuals: true,
+  show_personal_character: true,
 };
 
 function deepMerge<T>(base: T, patch: unknown): T {

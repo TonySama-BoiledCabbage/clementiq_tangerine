@@ -129,9 +129,9 @@ export function AccountSearch({ className, autoFocus }: { className?: string; au
               onFocus={() => setOpen(true)} onKeyDown={onKey}
               role="combobox" aria-expanded={open} aria-controls={listId} aria-autocomplete="list"
               aria-activedescendant={open && active >= 0 ? `${listId}-opt-${active}` : undefined}
-              aria-label="Search any authorized account ID" inputMode="numeric" autoComplete="off" spellCheck={false}
-              placeholder="Search any authorized account ID..."
-              className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-10 pr-16 text-[15px] font-medium text-slate-900 shadow-md placeholder:text-slate-500 focus:border-tangerine focus:outline-none focus:ring-4 focus:ring-tangerine/20" />
+              aria-label="Search authorized accounts" inputMode="numeric" autoComplete="off" spellCheck={false}
+              placeholder="Search authorized accounts..."
+              className="h-11 w-full rounded-xl border-2 border-slate-300 bg-white pl-10 pr-16 text-[0.9375rem] font-medium text-slate-900 shadow-md placeholder:text-slate-500 focus:border-tangerine focus:outline-none focus:ring-4 focus:ring-tangerine/20" />
             <span className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1">
               {pending && open && <Loader2 className="size-4 animate-spin text-slate-500" aria-label="Searching" />}
               {q && (
@@ -166,8 +166,8 @@ export function AccountSearch({ className, autoFocus }: { className?: string; au
                     r.account_id === accountId && "font-semibold")}>
                   <span className="flex items-center gap-2">
                     <span className="text-base font-bold tabular-nums">#{r.account_id}</span>
-                    {r.match === "exact" && <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-800">exact match</span>}
-                    {r.account_id === accountId && <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-800">current</span>}
+                    {r.match === "exact" && <span className="rounded-full bg-green-100 px-2 py-0.5 text-[0.625rem] font-bold text-green-800">exact match</span>}
+                    {r.account_id === accountId && <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[0.625rem] font-bold text-orange-800">current</span>}
                   </span>
                   <span className="text-right text-xs text-slate-600">income {money(r.income_I)} · buffer {money(r.buffer_B)}</span>
                 </li>
@@ -179,7 +179,7 @@ export function AccountSearch({ className, autoFocus }: { className?: string; au
                 {search.isFetchingNextPage ? "Loading…" : `Show more (${rows.length.toLocaleString()} of ${first?.total.toLocaleString()})`}
               </button>
             )}
-            <p className="border-t border-slate-200 px-4 py-1.5 text-[11px] text-slate-500">↑↓ to move · Enter to open · Esc to close</p>
+            <p className="border-t border-slate-200 px-4 py-1.5 text-[0.6875rem] text-slate-500">↑↓ to move · Enter to open · Esc to close</p>
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>

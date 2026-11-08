@@ -1,6 +1,7 @@
 "use client";
 /** Shared chart pieces. Series colors follow the ENTITY (validated palette in globals.css), never rank. */
 import { money } from "@/lib/format";
+import { useComfort } from "@/lib/hooks";
 
 export const SERIES = {
   income: "var(--series-4)",
@@ -40,7 +41,7 @@ export function ChartTooltip({ active, payload, label, fmt = (v: number) => mone
 
 export function Legend({ items }: { items: { label: string; color: string; dashed?: boolean }[] }) {
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-ink-2">
+    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[0.6875rem] text-ink-2">
       {items.map((i) => (
         <li key={i.label} className="flex items-center gap-1.5">
           <span className="inline-block h-0.5 w-4 rounded" style={{ background: i.dashed ? "transparent" : i.color, borderTop: i.dashed ? `2px dashed ${i.color}` : undefined }} />
@@ -53,8 +54,9 @@ export function Legend({ items }: { items: { label: string; color: string; dashe
 
 /** Accessible table view of any chart's data. */
 export function DataTable({ rows, columns, caption }: { rows: Record<string, unknown>[]; columns: { key: string; label: string; fmt?: (v: unknown) => string }[]; caption: string }) {
+  const comfort = useComfort();
   return (
-    <details className="mt-2 text-xs">
+    <details className="mt-2 text-xs" open={comfort.chart_tables}>
       <summary className="cursor-pointer text-ink-2 hover:text-tangerine">View as table</summary>
       <div className="mt-2 max-h-64 overflow-auto rounded-xl border border-line">
         <table className="w-full text-left">

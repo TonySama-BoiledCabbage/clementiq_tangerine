@@ -15,7 +15,8 @@
     "build:web": "npm --workspace apps/web run build",
     "lint:web": "npm --workspace apps/web run lint",
     "typecheck": "npm --workspace apps/web run typecheck",
-    "test:web": "npm --workspace apps/web run test"
+    "test:web": "npm --workspace apps/web run test",
+    "test:e2e": "node apps/web/e2e/layout-and-flows.mjs"
   },
   "devDependencies": {
     "playwright": "1.65.0"

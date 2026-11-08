@@ -32,8 +32,8 @@ export default function TwinScene({ points, target, selected, onSelect }: { poin
         <planeGeometry args={[width + 2, 3]} />
         <meshStandardMaterial color="#16a34a" transparent opacity={0.08} />
       </mesh>
-      <Html position={[x0 - 0.6, target * scale, 0]} center><span className="whitespace-nowrap rounded bg-white/90 px-1.5 text-[10px] text-green-700">Emergency target {money(target)}</span></Html>
-      <Html position={[x0 - 0.6, 0, 0]} center><span className="whitespace-nowrap rounded bg-white/90 px-1.5 text-[10px] text-red-700">$0 risk line</span></Html>
+      <Html position={[x0 - 0.6, target * scale, 0]} center><span className="whitespace-nowrap rounded bg-white/90 px-1.5 text-[0.625rem] text-green-700">Emergency target {money(target)}</span></Html>
+      <Html position={[x0 - 0.6, 0, 0]} center><span className="whitespace-nowrap rounded bg-white/90 px-1.5 text-[0.625rem] text-red-700">$0 risk line</span></Html>
       {points.map((p, i) => {
         const h = Math.max(Math.abs(p.balance) * scale, 0.02);
         const y = p.balance >= 0 ? h / 2 : -h / 2;
@@ -52,7 +52,7 @@ export default function TwinScene({ points, target, selected, onSelect }: { poin
       })}
       {pt && (
         <Html position={[x0 + idx * gap, Math.max(pt.balance * scale, 0) + 0.6, 0]} center style={{ pointerEvents: "none" }}>
-          <div className="whitespace-nowrap rounded-xl bg-white px-2.5 py-1.5 text-[11px] text-slate-900 shadow-lg">
+          <div className="whitespace-nowrap rounded-xl bg-white px-2.5 py-1.5 text-[0.6875rem] text-slate-900 shadow-lg">
             <b>{pt.label}</b> · {pt.kind === "history" ? "actual" : pt.kind === "shock" ? "shock projection" : "baseline projection"}<br />
             Balance {money(pt.balance)} · in {money(pt.income)} · out {money(pt.spending)}
           </div>

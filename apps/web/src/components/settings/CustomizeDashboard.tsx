@@ -96,7 +96,7 @@ export function CustomizeDashboard() {
                           <p className="flex flex-wrap items-center gap-1.5 text-sm font-semibold text-ink">{f.name}
                             {isDefaultOn(f, role) && <Badge tone="orange">default</Badge>}{f.roles && <Badge tone="neutral">{f.roles.join(" / ")}</Badge>}</p>
                           <p className="text-xs text-ink-2">{f.description}</p>
-                          {!on && f.background && <p className="mt-0.5 text-[11px] text-ink-3">{f.background}</p>}
+                          {!on && f.background && <p className="mt-0.5 text-[0.6875rem] text-ink-3">{f.background}</p>}
                         </div>
                         <button type="button" onClick={() => update.mutate({ dashboard: { favorites: toggledFavorites(dash.favorites, f.id) } })} aria-pressed={fav}
                           aria-label={fav ? `Unpin ${f.name}` : `Pin ${f.name} as favorite`} className={cn("grid size-8 cursor-pointer place-items-center rounded-full hover:bg-peach", fav ? "text-tangerine" : "text-ink-3")}>
@@ -123,7 +123,7 @@ export function CustomizeDashboard() {
                   <span className="mb-1.5 grid gap-0.5" style={{ gridTemplateColumns: `repeat(${Math.min(d.cols, 4)}, 1fr)` }}>
                     {Array.from({ length: Math.min(d.cols, 4) * 2 }, (_, i) => <span key={i} className="h-2.5 rounded-sm bg-tangerine/40" />)}
                   </span>
-                  <span className="block text-xs font-semibold text-ink">{d.name}</span><span className="block text-[10px] text-ink-2">{d.desc}</span>
+                  <span className="block text-xs font-semibold text-ink">{d.name}</span><span className="block text-[0.625rem] text-ink-2">{d.desc}</span>
                 </button>
               ))}
             </div>
@@ -148,7 +148,7 @@ export function CustomizeDashboard() {
                   {shown.map((f) => (
                     <div key={f.id} className={`pal-${f.palette} pal-card flex flex-col items-center rounded-lg p-1 text-center`}>
                       <FeatureIllustration id={f.id} size={density.cols > 4 ? 16 : 22} />
-                      <span className="line-clamp-2 text-[9px] font-semibold leading-tight text-ink">{f.name}</span>
+                      <span className="line-clamp-2 text-[0.5625rem] font-semibold leading-tight text-ink">{f.name}</span>
                     </div>
                   ))}
                 </div>

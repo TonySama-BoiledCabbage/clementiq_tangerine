@@ -15,6 +15,8 @@ import { NeedAccount, PageHeader } from "@/components/layout/PageKit";
 import { CalcInfo, FinancialMetricCard } from "@/components/finance/FinancialMetricCard";
 import { IncomeExpenseChart } from "@/components/finance/Charts";
 import { ChartTooltip, DataTable, Legend, SERIES, axisProps, gridProps } from "@/components/finance/chart-kit";
+import { ExportReportButton } from "@/components/reports/ExportReportButton";
+import { PlainSummary, SimpleCollapse } from "@/components/ui/comfort";
 
 const CAT_LABELS: Record<string, string> = {
   household_bills: "Household bills", insurance: "Insurance", loan_payments: "Loan payments", bank_fees: "Bank fees",
@@ -79,12 +81,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Financial Dashboard" subtitle="Know the customer: income, bills, fixed costs, buffer and runway" computedAt={s?.computed_at} />
+      <PageHeader title="Financial Dashboard" subtitle="Know the customer: income, bills, fixed costs, buffer and runway" computedAt={s?.computed_at}
+        right={<ExportReportButton report="financial" accountId={accountId} />} />
       {!accountId && <NeedAccount />}
       {error && <ErrorState error={error} retry={refetch} />}
       {isLoading && <Skeleton className="h-96" />}
       {s && (
         <>
+          <PlainSummary summary={s} />
           {s.warnings.length > 0 && <div className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200"><AlertTriangle className="size-4 shrink-0" />{s.warnings.join(" · ")}</div>}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
             <FinancialMetricCard label="Income (I)" value={money(s.judging.I)} icon={Banknote} tone="good" calc={calc("income_I")} />
@@ -100,6 +104,7 @@ export default function DashboardPage() {
               footer={<Progress className="mt-2" tone="good" value={(s.metrics.emergency_fund_progress ?? 0) * 100} label="Emergency fund progress" />} />
           </div>
 
+          <SimpleCollapse title="charts, trends and transactions">
           <Card>
             <CardHeader><div><CardTitle>Income vs spending</CardTitle><CardDescription>{s.metrics.months_of_data} months · {s.metrics.first_month} → {s.metrics.last_month}</CardDescription></div><CalendarRange className="size-4 text-ink-3" /></CardHeader>
             <CardContent><IncomeExpenseChart series={s.series} /></CardContent>
@@ -118,7 +123,7 @@ export default function DashboardPage() {
                     <Bar dataKey="value" name="Median / month" fill={SERIES.spending} radius={[0, 4, 4, 0]} barSize={18} />
                   </BarChart>
                 </ResponsiveContainer>
-                <p className="text-[11px] text-ink-3">Medians are computed per category, so they need not add up to S.</p>
+                <p className="text-[0.6875rem] text-ink-3">Medians are computed per category, so they need not add up to S.</p>
               </CardContent>
             </Card>
             <Card>
@@ -137,7 +142,7 @@ export default function DashboardPage() {
                       <Line dataKey="forecast" name="Projection" stroke={SERIES.fixed} strokeWidth={2} strokeDasharray="5 4" dot={{ r: 3 }} />
                     </ComposedChart>
                   </ResponsiveContainer>
-                  <p className="text-[11px] text-ink-3">{s.forecast.label}</p>
+                  <p className="text-[0.6875rem] text-ink-3">{s.forecast.label}</p>
                 </> : <p className="text-sm text-ink-2">Not enough history for a projection.</p>}
               </CardContent>
             </Card>
@@ -148,9 +153,9 @@ export default function DashboardPage() {
               <CardHeader><div><CardTitle>Financial risk indicators</CardTitle><CardDescription>Detected from this account’s own history (robust z-scores)</CardDescription></div></CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="rounded-xl bg-cream p-2"><p className="tabular text-lg font-bold">{s.metrics.days_below_zero_12m}</p><p className="text-[10px] text-ink-2">overdraft days (12m)</p></div>
-                  <div className="rounded-xl bg-cream p-2"><p className="tabular text-lg font-bold">{s.metrics.income_cv?.toFixed(2) ?? "—"}</p><p className="text-[10px] text-ink-2">income variability (CV)</p></div>
-                  <div className="rounded-xl bg-cream p-2"><p className="tabular text-lg font-bold">{s.metrics.spending_cv?.toFixed(2) ?? "—"}</p><p className="text-[10px] text-ink-2">spending variability (CV)</p></div>
+                  <div className="rounded-xl bg-cream p-2"><p className="tabular text-lg font-bold">{s.metrics.days_below_zero_12m}</p><p className="text-[0.625rem] text-ink-2">overdraft days (12m)</p></div>
+                  <div className="rounded-xl bg-cream p-2"><p className="tabular text-lg font-bold">{s.metrics.income_cv?.toFixed(2) ?? "—"}</p><p className="text-[0.625rem] text-ink-2">income variability (CV)</p></div>
+                  <div className="rounded-xl bg-cream p-2"><p className="tabular text-lg font-bold">{s.metrics.spending_cv?.toFixed(2) ?? "—"}</p><p className="text-[0.625rem] text-ink-2">spending variability (CV)</p></div>
                 </div>
                 <p className="text-xs font-semibold text-ink-2">Expenses changing most (last 6 vs prior 6 months)</p>
                 <ul className="space-y-1">{s.trends.category_changes.slice(0, 4).map((c) => (
@@ -172,7 +177,7 @@ export default function DashboardPage() {
                     <span className="flex items-center gap-1"><span className="tabular font-semibold">{money(c.value)}</span><CalcInfo calc={c} title={c.name} /></span>
                   </li>
                 ))}</ul>
-                <p className="mt-2 text-[11px] text-ink-3">Net worth is not shown: average balances are not a complete net worth, and other assets and debts are not in the data.</p>
+                <p className="mt-2 text-[0.6875rem] text-ink-3">Net worth is not shown: average balances are not a complete net worth, and other assets and debts are not in the data.</p>
               </CardContent>
             </Card>
           </div>
@@ -181,6 +186,7 @@ export default function DashboardPage() {
           <DataTable caption="Monthly summary" rows={s.series as unknown as Record<string, unknown>[]} columns={[
             { key: "month", label: "Month" }, { key: "money_in", label: "In", fmt: (v) => money(v as number) }, { key: "money_out", label: "Out", fmt: (v) => money(v as number) },
             { key: "household_bills", label: "Bills", fmt: (v) => money(v as number) }, { key: "avg_daily_balance", label: "Avg balance", fmt: (v) => money(v as number) }]} />
+          </SimpleCollapse>
         </>
       )}
     </div>

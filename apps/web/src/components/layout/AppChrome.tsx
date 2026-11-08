@@ -2,9 +2,9 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Accessibility, ArrowLeft, ChevronDown, LayoutGrid, LogOut, Palette, Settings, SlidersHorizontal, UserRound } from "lucide-react";
-import { DEFAULT_DASHBOARD, FEATURES, featureForPath, homeFeatures } from "@/lib/features";
-import { useSettings, useVerifiedRole } from "@/lib/hooks";
+import { ArrowLeft, ChevronDown, LayoutGrid, LogOut, Settings, UserRound } from "lucide-react";
+import { DEFAULT_DASHBOARD, featureForPath, homeFeatures } from "@/lib/features";
+import { useComfort, useSettings, useUpdatePrefs, useVerifiedRole } from "@/lib/hooks";
 import { initials, useMediaUrl, useProfile } from "@/lib/profile";
 import { useSession } from "@/lib/store";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,8 @@ export function ThemeSync() {
   const s = useSettings();
   const theme = s.data?.preferences.appearance?.theme;
   const reduced = s.data?.preferences.display.reduced_motion;
+  const comfort = useComfort();
+  const update = useUpdatePrefs();
   useEffect(() => {
     if (!theme) return;
     const el = document.documentElement;
@@ -26,8 +28,28 @@ export function ThemeSync() {
     try { if (theme === "system") localStorage.removeItem("clementiq-theme"); else localStorage.setItem("clementiq-theme", theme); } catch { /* storage unavailable */ }
   }, [theme]);
   useEffect(() => {
-    document.documentElement.dataset.reducedMotion = reduced ? "true" : "false";
-  }, [reduced]);
+    document.documentElement.dataset.reducedMotion = reduced || comfort.calm_mode ? "true" : "false";
+  }, [reduced, comfort.calm_mode]);
+  // Accessibility & Comfort preferences become attributes on <html>; globals.css does the rest.
+  useEffect(() => {
+    const el = document.documentElement.dataset;
+    el.textSize = comfort.text_size;
+    el.contrast = comfort.high_contrast ? "high" : "normal";
+    el.focus = comfort.enhanced_focus ? "enhanced" : "normal";
+    el.simple = comfort.simple_mode ? "true" : "false";
+    el.calm = comfort.calm_mode ? "true" : "false";
+  }, [comfort.text_size, comfort.high_contrast, comfort.enhanced_focus, comfort.simple_mode, comfort.calm_mode]);
+  // Privacy mode shortcut: Alt+Shift+H toggles "Hide my balances".
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.altKey && e.shiftKey && e.code === "KeyH") {
+        e.preventDefault();
+        update.mutate({ privacy: { mask_balances: !comfort.mask } });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [comfort.mask, update]);
   return null;
 }
 
@@ -43,15 +65,7 @@ export function ProfileAvatar({ size = 36, className }: { size?: number; classNa
   );
 }
 
-/** The single entry point for profile, customization and settings. */
-const PROFILE_MENU = [
-  { label: "My Profile", section: "profile", icon: UserRound },
-  { label: "Customize Dashboard", section: "dashboard", icon: SlidersHorizontal },
-  { label: "Accessibility & Comfort", section: "accessibility", icon: Accessibility },
-  { label: "Appearance & Avatar", section: "appearance", icon: Palette },
-  { label: "Account Settings", section: "account", icon: Settings },
-] as const;
-
+/** The single account entry point: exactly My Profile, Settings and Sign Out. */
 function UserMenu() {
   const { sub, logout } = useSession();
   const role = useVerifiedRole();
@@ -62,15 +76,14 @@ function UserMenu() {
       <DropdownMenuTrigger className="cursor-pointer rounded-full focus-visible:ring-4 focus-visible:ring-tangerine/40" aria-label={`Account menu for ${p.data?.display_name ?? "you"}`}>
         <ProfileAvatar size={40} />
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64">
+      <DropdownMenuContent className="w-60">
         <DropdownMenuLabel className="flex items-center gap-3">
           <ProfileAvatar size={36} />
           <span><b className="block text-sm text-ink">{p.data?.display_name ?? sub}</b>{role}{role === "judge" && " · read-only"}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {PROFILE_MENU.map((m) => (
-          <DropdownMenuItem key={m.section} onSelect={() => router.push(`/settings?section=${m.section}`)} className="min-h-10"><m.icon /> {m.label}</DropdownMenuItem>
-        ))}
+        <DropdownMenuItem onSelect={() => router.push("/profile")} className="min-h-10"><UserRound /> My Profile</DropdownMenuItem>
+        <DropdownMenuItem onSelect={() => router.push("/settings")} className="min-h-10"><Settings /> Settings</DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => { logout(); router.push("/login"); }} className="min-h-10"><LogOut /> Sign Out</DropdownMenuItem>
       </DropdownMenuContent>
@@ -102,10 +115,11 @@ export function WorkspaceTopBar() {
   const role = useVerifiedRole();
   const settings = useSettings();
   const dash = settings.data?.preferences.dashboard ?? DEFAULT_DASHBOARD;
+  const router = useRouter();
   const current = featureForPath(path);
-  const isSettings = path.startsWith("/settings");
+  // Same registry, permissions and preferences as the Home cards: enabled features only, same order.
   const visible = homeFeatures(dash, role);
-  const others = FEATURES.filter((f) => !visible.includes(f) && (!f.roles || (role && f.roles.includes(role))));
+  const pageName = current?.name ?? (path.startsWith("/settings") ? "Settings" : path.startsWith("/profile") ? "My Profile" : "ClementIQ");
   return (
     <header className="glass sticky top-0 z-30 border-b border-line">
       <div className="mx-auto flex h-16 max-w-[1500px] items-center gap-2 px-3 sm:gap-3 sm:px-6">
@@ -114,17 +128,18 @@ export function WorkspaceTopBar() {
         </Link>
         <DropdownMenu>
           <DropdownMenuTrigger className="flex min-w-0 cursor-pointer items-center gap-2 rounded-2xl px-2 py-1 hover:bg-peach" aria-label="Switch feature">
-            {current ? <FeatureIllustration id={current.id} size={30} /> : <span className="grid size-9 place-items-center rounded-xl bg-peach text-tangerine">{isSettings ? <Settings className="size-4" /> : <LayoutGrid className="size-4" />}</span>}
-            <span className="truncate text-sm font-bold text-ink sm:text-base">{current?.name ?? (isSettings ? "Settings" : "ClementIQ")}</span>
+            {current ? <FeatureIllustration id={current.id} size={30} /> : <span className="grid size-9 place-items-center rounded-xl bg-peach text-tangerine">{path.startsWith("/settings") ? <Settings className="size-4" /> : path.startsWith("/profile") ? <UserRound className="size-4" /> : <LayoutGrid className="size-4" />}</span>}
+            <span className="truncate text-sm font-bold text-ink sm:text-base">{pageName}</span>
             <ChevronDown className="size-4 shrink-0 text-ink-3" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="max-h-[70vh] w-72 overflow-y-auto">
-            <DropdownMenuLabel>Your dashboard</DropdownMenuLabel>
-            {visible.map((f) => <Link key={f.id} href={f.route}><DropdownMenuItem><FeatureIllustration id={f.id} size={22} /> {f.name}</DropdownMenuItem></Link>)}
-            {others.length > 0 && <><DropdownMenuSeparator /><DropdownMenuLabel>Hidden from Home</DropdownMenuLabel>
-              {others.map((f) => <Link key={f.id} href={f.route}><DropdownMenuItem className="opacity-80"><FeatureIllustration id={f.id} size={22} /> {f.name}</DropdownMenuItem></Link>)}</>}
-            <DropdownMenuSeparator />
-            <Link href="/settings?section=dashboard"><DropdownMenuItem><SlidersHorizontal /> Customize my dashboard</DropdownMenuItem></Link>
+            <DropdownMenuLabel>Your tools</DropdownMenuLabel>
+            {visible.length ? visible.map((f) => (
+              <DropdownMenuItem key={f.id} onSelect={() => router.push(f.route)} aria-current={current?.id === f.id ? "page" : undefined}
+                className={current?.id === f.id ? "bg-peach font-semibold" : undefined}>
+                <FeatureIllustration id={f.id} size={22} /> {f.name}
+              </DropdownMenuItem>
+            )) : <p className="px-2.5 py-2 text-xs text-ink-2">No tools enabled. Turn some on in Settings.</p>}
           </DropdownMenuContent>
         </DropdownMenu>
         <div className="ml-auto"><RightActions /></div>

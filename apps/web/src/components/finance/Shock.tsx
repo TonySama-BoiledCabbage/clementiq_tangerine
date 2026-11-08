@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/controls";
 import { FinancialRunwayGauge } from "./Gauges";
+import { useComfort } from "@/lib/hooks";
+import { calmVerdict } from "@/components/ui/comfort";
 
 export const SHOCK_DEFAULTS: Record<ShockType, ShockComponent> = {
   job_loss: { type: "job_loss", income_replacement_pct: 55, duration_months: 6 },
@@ -34,7 +36,7 @@ export function ShockParameterSlider({ label, value, min, max, step = 1, unit, o
           className="tabular h-7 w-24 rounded-lg border border-line bg-surface px-2 text-right text-xs" />
       </div>
       <Slider value={[value]} min={min} max={max} step={step} onValueChange={([v]) => onChange(v)} aria-label={label} />
-      <p className="text-[10px] text-ink-3">{shown}{hint ? ` · ${hint}` : ""}</p>
+      <p className="text-[0.625rem] text-ink-3">{shown}{hint ? ` · ${hint}` : ""}</p>
     </div>
   );
 }
@@ -52,7 +54,7 @@ export function ShockScenarioSelector({ components, onChange, types, presets, on
         <p className="mb-2 text-xs font-semibold text-ink-2">Scenario presets</p>
         <div className="flex flex-wrap gap-1.5">
           {presets.filter((p) => mode === "extended" || p.judging).map((p) => (
-            <button key={p.id} onClick={() => onPreset(p)} className="cursor-pointer rounded-full border border-line px-3 py-1 text-[11px] font-medium hover:border-tangerine hover:text-tangerine">{p.name}</button>
+            <button key={p.id} onClick={() => onPreset(p)} className="cursor-pointer rounded-full border border-line px-3 py-1 text-[0.6875rem] font-medium hover:border-tangerine hover:text-tangerine">{p.name}</button>
           ))}
         </div>
       </div>
@@ -78,7 +80,7 @@ export function ShockScenarioSelector({ components, onChange, types, presets, on
                 : <ShockParameterSlider label={c.type === "rent_increase" ? "Increase (× H)" : "Increase (× P)"} unit="%" value={c.pct ?? 0} min={0} max={100} onChange={(v) => upd(i, { pct: v })} />
             )}
             {["rent_increase", "loan_payment_increase"].includes(c.type) && (
-              <button className="cursor-pointer text-[11px] font-semibold text-tangerine" onClick={() => upd(i, c.amount !== undefined ? { amount: undefined, pct: 10 } : { pct: undefined, amount: 200 })}>
+              <button className="cursor-pointer text-[0.6875rem] font-semibold text-tangerine" onClick={() => upd(i, c.amount !== undefined ? { amount: undefined, pct: 10 } : { pct: undefined, amount: 200 })}>
                 Switch to {c.amount !== undefined ? "percentage" : "$ amount"}
               </button>
             )}
@@ -88,7 +90,7 @@ export function ShockScenarioSelector({ components, onChange, types, presets, on
                 : <ShockParameterSlider label="Extra per month" unit="$" value={c.amount ?? 0} min={0} max={2000} step={10} onChange={(v) => upd(i, { amount: v })} />
             )}
             {["transport_cost", "grocery_cost"].includes(c.type) && mode === "extended" && (
-              <button className="cursor-pointer text-[11px] font-semibold text-tangerine" onClick={() => upd(i, c.pct !== undefined ? { pct: undefined, amount: 100 } : { amount: undefined, pct: 10 })}>
+              <button className="cursor-pointer text-[0.6875rem] font-semibold text-tangerine" onClick={() => upd(i, c.pct !== undefined ? { pct: undefined, amount: 100 } : { amount: undefined, pct: 10 })}>
                 Switch to {c.pct !== undefined ? "$ amount" : "% of estimated spending"}
               </button>
             )}
@@ -98,7 +100,7 @@ export function ShockScenarioSelector({ components, onChange, types, presets, on
                 : <ShockParameterSlider label="One-off cost" unit="$" value={c.amount ?? 0} min={0} max={30000} step={100} onChange={(v) => upd(i, { amount: v })} />
             )}
             {["emergency_expense", "vehicle_repair"].includes(c.type) && (
-              <button className="cursor-pointer text-[11px] font-semibold text-tangerine" onClick={() => upd(i, c.months_of_spending !== undefined ? { months_of_spending: undefined, amount: 2000 } : { amount: undefined, months_of_spending: 1 })}>
+              <button className="cursor-pointer text-[0.6875rem] font-semibold text-tangerine" onClick={() => upd(i, c.months_of_spending !== undefined ? { months_of_spending: undefined, amount: 2000 } : { amount: undefined, months_of_spending: 1 })}>
                 Express as {c.months_of_spending !== undefined ? "$ amount" : "months of typical spending"}
               </button>
             )}
@@ -115,6 +117,7 @@ export function ShockScenarioSelector({ components, onChange, types, presets, on
 }
 
 export function FinancialImpactSummary({ sim }: { sim: SimResult }) {
+  const comfort = useComfort();
   const rows = [
     { k: "Monthly income", b: sim.baseline.income, s: sim.scenario.income },
     { k: "Monthly spending", b: sim.baseline.spending, s: sim.scenario.spending },
@@ -129,7 +132,7 @@ export function FinancialImpactSummary({ sim }: { sim: SimResult }) {
       </div>
       {sim.verdict && (
         <div className={cn("rounded-2xl p-3 text-sm font-semibold", sim.verdict.survives ? "bg-green-50 text-green-800 dark:bg-green-950 dark:text-green-200" : "bg-red-50 text-red-800 dark:bg-red-950 dark:text-red-200")}>
-          {sim.verdict.survives ? "✓ " : "▲ "}{sim.verdict.text}
+          {sim.verdict.survives ? "✓ " : "▲ "}{calmVerdict(sim.verdict.text, sim.verdict.survives, comfort.calm_mode)}
           {!sim.verdict.survives && sim.verdict.shortfall_over_period > 0 && <span className="block text-xs font-normal">Additional funds needed to last the full period: {money(sim.verdict.shortfall_over_period)}</span>}
         </div>
       )}

@@ -72,17 +72,17 @@ export function SolanaWalletPanel({ onValue }: { onValue: (v: number | null) => 
         {w.data && (
           <div className="space-y-3">
             <div className="grid gap-2 sm:grid-cols-3">
-              <div className="rounded-xl bg-cream p-3"><p className="text-[11px] text-ink-2">SOL balance</p><p className="tabular text-xl font-bold">{w.data.sol.toLocaleString("en-CA", { maximumFractionDigits: 4 })}</p></div>
-              <div className="rounded-xl bg-cream p-3"><p className="text-[11px] text-ink-2">Value (CAD)</p><p className="tabular text-xl font-bold">{w.data.valuation.value_cad !== undefined ? money(w.data.valuation.value_cad) : "—"}</p>
-                <p className="text-[10px] text-ink-3">{w.data.valuation.price_source ? `${w.data.valuation.price_source} · ${money(w.data.valuation.sol_price_cad, true)}/SOL` : w.data.valuation.note}</p></div>
-              <div className="rounded-xl bg-cream p-3"><p className="text-[11px] text-ink-2">Assets</p><p className="tabular text-xl font-bold">{w.data.concentration.distinct_assets}</p><p className="text-[10px] text-ink-3">{w.data.concentration.note}</p></div>
+              <div className="rounded-xl bg-cream p-3"><p className="text-[0.6875rem] text-ink-2">SOL balance</p><p className="tabular text-xl font-bold">{w.data.sol.toLocaleString("en-CA", { maximumFractionDigits: 4 })}</p></div>
+              <div className="rounded-xl bg-cream p-3"><p className="text-[0.6875rem] text-ink-2">Value (CAD)</p><p className="tabular text-xl font-bold">{w.data.valuation.value_cad !== undefined ? money(w.data.valuation.value_cad) : "—"}</p>
+                <p className="text-[0.625rem] text-ink-3">{w.data.valuation.price_source ? `${w.data.valuation.price_source} · ${money(w.data.valuation.sol_price_cad, true)}/SOL` : w.data.valuation.note}</p></div>
+              <div className="rounded-xl bg-cream p-3"><p className="text-[0.6875rem] text-ink-2">Assets</p><p className="tabular text-xl font-bold">{w.data.concentration.distinct_assets}</p><p className="text-[0.625rem] text-ink-3">{w.data.concentration.note}</p></div>
             </div>
             {w.data.tokens.length > 0 && <ul className="text-xs">{w.data.tokens.map((t) => <li key={t.mint} className="flex justify-between border-t border-line py-1"><span>{t.symbol ?? `${t.mint.slice(0, 6)}…`} <Badge>{t.program}</Badge></span><span className="tabular">{t.amount.toLocaleString()}</span></li>)}</ul>}
             {activity.length > 0 && <ResponsiveContainer width="100%" height={140}><BarChart data={activity}><CartesianGrid {...gridProps} /><XAxis dataKey="day" {...axisProps} /><YAxis allowDecimals={false} {...axisProps} width={28} /><Tooltip content={<ChartTooltip fmt={(v) => `${v} tx`} />} /><Bar dataKey="n" name="Transactions" fill={SERIES.invest} radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer>}
-            <ul className="max-h-48 overflow-y-auto text-[11px]">{w.data.transactions.map((t) => (
+            <ul className="max-h-48 overflow-y-auto text-[0.6875rem]">{w.data.transactions.map((t) => (
               <li key={t.signature} className="flex justify-between gap-2 border-t border-line py-1"><a className="truncate underline hover:text-tangerine" target="_blank" rel="noopener noreferrer" href={`https://explorer.solana.com/tx/${t.signature}${network === "devnet" ? "?cluster=devnet" : ""}`}>{t.signature.slice(0, 20)}…</a><span className="text-ink-3">{t.block_time?.slice(0, 16).replace("T", " ")}{t.error && " · failed"}</span></li>
             ))}</ul>
-            <p className="text-[10px] text-ink-3">{w.data.source} · retrieved {w.data.retrieved_at.slice(0, 19).replace("T", " ")} UTC</p>
+            <p className="text-[0.625rem] text-ink-3">{w.data.source} · retrieved {w.data.retrieved_at.slice(0, 19).replace("T", " ")} UTC</p>
           </div>
         )}
       </CardContent>
@@ -104,7 +104,7 @@ export function CryptoShockSimulator({ accountId, walletValue }: { accountId: nu
         {q.data && <div className="rounded-xl bg-cream p-3 text-sm">
           <p>{money(q.data.initial_value)} → <b>{money(q.data.modeled_value)}</b> <span className={q.data.gain_loss >= 0 ? "text-good" : "text-bad"}>({signedMoney(q.data.gain_loss)})</span></p>
           {q.data.relative_to_buffer != null && <p className="text-xs text-ink-2">Equivalent to {Math.abs(q.data.relative_to_buffer * 100).toFixed(0)}% of the customer’s liquid buffer.</p>}
-          {q.data.note && <p className="text-[11px] text-ink-3">{q.data.note}</p>}
+          {q.data.note && <p className="text-[0.6875rem] text-ink-3">{q.data.note}</p>}
         </div>}
       </CardContent>
     </Card>
@@ -163,7 +163,7 @@ function GoalProof({ accountId }: { accountId: number }) {
           <li key={g.id} className="rounded-xl border border-line p-3 text-xs">
             <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-semibold">{g.name} · {money(g.target_amount)}</p>
               {g.devnet_verified ? <Badge tone="good"><ShieldCheck /> On-chain verified</Badge> : g.devnet_signature ? <Badge tone="warn">signature unverified</Badge> : <Badge>not recorded</Badge>}</div>
-            <p className="mt-1 break-all font-mono text-[10px] text-ink-3">{g.memo}</p>
+            <p className="mt-1 break-all font-mono text-[0.625rem] text-ink-3">{g.memo}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               {!g.devnet_verified && <Button size="sm" disabled={!connected || record.isPending} onClick={() => record.mutate(g)}>{record.isPending && <Spinner />} Sign & record on Devnet</Button>}
               {g.explorer_url && <a href={g.explorer_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-semibold text-tangerine">View on Solana Explorer <ExternalLink className="size-3" /></a>}

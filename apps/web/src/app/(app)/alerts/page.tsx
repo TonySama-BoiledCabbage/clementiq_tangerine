@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/layout/PageKit";
 import { SeverityBadge } from "@/components/alerts/SeverityBadge";
 import { AlertPreferences } from "@/components/alerts/AlertPreferences";
 import { EngineBadge } from "@/components/finance/EngineBadge";
+import { ReadAloud } from "@/components/ui/comfort";
 
 const FILTERS = [["", "All"], ["financial_health", "Financial health"], ["global_events", "Global events"], ["investments", "Investments"], ["crypto", "Cryptocurrency"], ["loan_exposure", "Loan exposure"], ["savings_goals", "Savings goals"]];
 
@@ -43,10 +44,11 @@ export default function AlertsPage() {
           {alerts.data?.items.map((a) => (
             <Card key={a.id} className={`p-4 ${a.is_read ? "opacity-80" : "border-l-4 border-l-tangerine"}`}>
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="min-w-0"><p className="font-semibold">{a.title}</p><p className="text-[11px] text-ink-2">{a.source} · {a.event_timestamp ? `event ${dateTime(a.event_timestamp)} · ` : ""}created {dateTime(a.created_at)}</p></div>
+                <div className="min-w-0"><p className="font-semibold">{a.title}</p><p className="text-[0.6875rem] text-ink-2">{a.source} · {a.event_timestamp ? `event ${dateTime(a.event_timestamp)} · ` : ""}created {dateTime(a.created_at)}</p></div>
                 <div className="flex items-center gap-1.5"><SeverityBadge s={a.severity} /><Badge>{a.category.replace(/_/g, " ")}</Badge></div>
               </div>
               <p className="mt-2 text-sm">{a.relevance}</p>
+              <ReadAloud className="mt-2" text={`${a.title}. ${a.relevance} Suggested: ${a.suggested_action}`} label="Read alert" />
               {a.explanation && <div className="mt-2 rounded-xl bg-cream p-2.5 text-xs"><EngineBadge engine={a.explanation_engine ?? "clement-core-template"} /> <span className="ml-1">{a.explanation}</span></div>}
               <div className="mt-2 grid gap-2 text-xs sm:grid-cols-3">
                 <p><span className="text-ink-3">Modeled impact:</span> {typeof a.modeled_impact.monthly_change === "number" ? `${money(a.modeled_impact.monthly_change as number)}/mo` : (a.modeled_impact.runway as string) ?? "—"}{a.modeled_impact.magnitude_basis ? ` (${a.modeled_impact.magnitude_basis})` : ""}</p>
@@ -57,7 +59,7 @@ export default function AlertsPage() {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {a.simulation_link && <Button asChild size="sm" variant="secondary"><Link href={a.simulation_link} onClick={() => !a.is_read && mark.mutate({ id: a.id, is_read: true })}>Open simulation</Link></Button>}
                 <Button size="sm" variant="ghost" onClick={() => mark.mutate({ id: a.id, is_read: !a.is_read })}><Check /> Mark {a.is_read ? "unread" : "read"}</Button>
-                {a.delivered_channels.includes("email") && <span className="flex items-center gap-1 text-[11px] text-ink-3"><Mail className="size-3" /> emailed</span>}
+                {a.delivered_channels.includes("email") && <span className="flex items-center gap-1 text-[0.6875rem] text-ink-3"><Mail className="size-3" /> emailed</span>}
               </div>
             </Card>
           ))}
@@ -65,7 +67,7 @@ export default function AlertsPage() {
         <div className="space-y-4">
           <Card><CardHeader><div><CardTitle>Alert preferences</CardTitle><CardDescription>You control what, when and how often</CardDescription></div></CardHeader><CardContent><AlertPreferences /></CardContent></Card>
           <Card><CardHeader><div><CardTitle>Generation history</CardTitle><CardDescription>Audit trail of every alert run</CardDescription></div></CardHeader>
-            <CardContent><ul className="space-y-1 text-[11px]">{history.data?.items.map((h, i) => <li key={i} className="flex justify-between border-t border-line py-1"><span>{dateTime(h.run_at)} · #{h.account_id}</span><span className="text-ink-2">{h.candidates}→{h.created}</span></li>)}</ul>
+            <CardContent><ul className="space-y-1 text-[0.6875rem]">{history.data?.items.map((h, i) => <li key={i} className="flex justify-between border-t border-line py-1"><span>{dateTime(h.run_at)} · #{h.account_id}</span><span className="text-ink-2">{h.candidates}→{h.created}</span></li>)}</ul>
               {!history.data?.items.length && <p className="text-xs text-ink-3">No runs yet.</p>}</CardContent></Card>
         </div>
       </div>

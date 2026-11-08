@@ -22,7 +22,7 @@ export function EmergencySavingsProgress({ current, target, milestones }: { curr
           <li key={m.pct} className={cn("rounded-xl border p-2 text-center", m.reached ? "border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950" : "border-line")}>
             <Flag className={cn("mx-auto size-4", m.reached ? "text-good" : "text-ink-3")} />
             <p className="text-xs font-semibold">{m.pct}% · {money(m.amount)}</p>
-            <p className="text-[10px] text-ink-2">{m.reached ? "Reached ✓" : m.month !== null ? `≈ month ${m.month}` : "needs savings capacity"}</p>
+            <p className="text-[0.625rem] text-ink-2">{m.reached ? "Reached ✓" : m.month !== null ? `≈ month ${m.month}` : "needs savings capacity"}</p>
           </li>
         ))}
       </ol>

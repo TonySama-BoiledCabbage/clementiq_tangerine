@@ -27,8 +27,8 @@ export function FinancialRunwayGauge({ runway, label = "Financial runway", size 
           const ta = Math.PI + (t / max) * Math.PI;
           return <line key={t} x1={100 + 66 * Math.cos(ta)} y1={100 + 66 * Math.sin(ta)} x2={100 + 72 * Math.cos(ta)} y2={100 + 72 * Math.sin(ta)} stroke="var(--ink-3)" strokeWidth="1.5" />;
         })}
-        <text x="100" y="88" textAnchor="middle" className="fill-[var(--ink)] text-[26px] font-bold">{runway.no_shortfall ? "120+" : runway.display}</text>
-        <text x="100" y="106" textAnchor="middle" className="fill-[var(--ink-2)] text-[10px]">{runway.no_shortfall ? "no shortfall" : "months"}</text>
+        <text x="100" y="88" textAnchor="middle" className="fill-[var(--ink)] text-[1.625rem] font-bold">{runway.no_shortfall ? "120+" : runway.display}</text>
+        <text x="100" y="106" textAnchor="middle" className="fill-[var(--ink-2)] text-[0.625rem]">{runway.no_shortfall ? "no shortfall" : "months"}</text>
       </svg>
       <p className={cn("mt-1 text-xs font-semibold", status === "bad" ? "text-bad" : status === "warn" ? "text-warn" : "text-good")}>
         {status === "bad" ? "▲ " : status === "warn" ? "● " : "✓ "}{statusText}
@@ -49,7 +49,7 @@ export function ResilienceScoreGauge({ score, band, size = 150 }: { score: numbe
       </svg>
       <div className="absolute text-center">
         <p className="tabular text-3xl font-extrabold leading-none text-ink">{Math.round(score)}</p>
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-2">{band}</p>
+        <p className="text-[0.625rem] font-semibold uppercase tracking-wide text-ink-2">{band}</p>
       </div>
     </div>
   );

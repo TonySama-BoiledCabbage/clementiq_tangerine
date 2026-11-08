@@ -20,6 +20,7 @@ import { FinancialImpactSummary, ShockParameterSlider, ShockScenarioSelector } f
 import { ScenarioComparisonChart } from "@/components/finance/Charts";
 import { AIInsightCard } from "@/components/ai/AIInsightCard";
 import { EngineBadge } from "@/components/finance/EngineBadge";
+import { ExportReportButton } from "@/components/reports/ExportReportButton";
 
 function useDebounced<T>(v: T, ms = 150) {
   const [d, setD] = useState(v);
@@ -60,7 +61,8 @@ export default function SimulatorPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Advanced Financial Shock Simulator" subtitle="Apply one or more shocks and watch runway recalculate instantly — no AI call needed" computedAt={sim.data?.computed_at} />
+      <PageHeader title="Advanced Financial Shock Simulator" subtitle="Apply one or more shocks and watch runway recalculate instantly — no AI call needed" computedAt={sim.data?.computed_at}
+        right={<ExportReportButton report="shock" accountId={accountId} shock={valid ? req : null} />} />
       {!accountId && <NeedAccount />}
       {accountId && (
         <div className="grid gap-6 xl:grid-cols-[400px_1fr]">
@@ -74,7 +76,7 @@ export default function SimulatorPage() {
                 </label>
               </CardHeader>
               <CardContent>
-                <p className="mb-3 rounded-xl bg-cream p-2 text-[11px] text-ink-2">
+                <p className="mb-3 rounded-xl bg-cream p-2 text-[0.6875rem] text-ink-2">
                   {mode === "judging" ? "Judging Mode uses only the Tangerine README formulas: income × multiplier, spending + % × H, one-off costs from B. No extra assumptions."
                     : "Extended mode adds labelled assumptions: EI weekly maximum, income ending after EI, estimated category allocations and optional spending cuts."}
                 </p>

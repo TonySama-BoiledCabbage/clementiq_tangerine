@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ErrorState, Spinner } from "@/components/ui/misc";
 import { EngineBadge } from "@/components/finance/EngineBadge";
+import { ReadAloud } from "@/components/ui/comfort";
 
 interface ScenarioExplanation {
   headline: string; what_happened: string; why_it_matters: string; affected_categories: string[]; what_the_numbers_show: string;
@@ -35,11 +36,12 @@ export function AIInsightCard({ title = "Explain with Clement Gemini", endpoint,
         {!res && !m.isPending && !m.isError && <p className="text-xs text-ink-2">Get a plain-language explanation of these results. Gemini only sees rounded summaries — never your account ID or personal details.</p>}
         {res && (
           <>
-            <div className="flex flex-wrap items-center gap-2"><EngineBadge engine={res.engine} />{res.model && <span className="text-[10px] text-ink-3">{res.model}</span>}
-              {res.fallback_reason && <span className="text-[10px] text-ink-3" title={res.fallback_reason}>Gemini unavailable — template used</span>}</div>
+            <div className="flex flex-wrap items-center gap-2"><EngineBadge engine={res.engine} />{res.model && <span className="text-[0.625rem] text-ink-3">{res.model}</span>}
+              {res.fallback_reason && <span className="text-[0.625rem] text-ink-3" title={res.fallback_reason}>Gemini unavailable — template used</span>}</div>
             {kind === "scenario" ? (
               <>
-                <p className="font-semibold">{res.content.headline}</p>
+                <div className="flex flex-wrap items-center justify-between gap-2"><p className="font-semibold">{res.content.headline}</p>
+                  <ReadAloud text={[res.content.headline, res.content.what_happened, res.content.why_it_matters, res.content.what_the_numbers_show].join(" ")} /></div>
                 <p><b className="text-xs uppercase text-ink-2">What happened</b><br />{res.content.what_happened}</p>
                 <p><b className="text-xs uppercase text-ink-2">Why it matters</b><br />{res.content.why_it_matters}</p>
                 <p><b className="text-xs uppercase text-ink-2">What the numbers show</b><br />{res.content.what_the_numbers_show}</p>
@@ -48,6 +50,7 @@ export function AIInsightCard({ title = "Explain with Clement Gemini", endpoint,
               </>
             ) : (
               <>
+                <ReadAloud text={[res.content.summary, ...(res.content.key_steps ?? [])].join(" ")} />
                 <p>{res.content.summary}</p>
                 <ol className="list-decimal space-y-1 pl-5">{res.content.key_steps?.map((s, i) => <li key={i}>{s}</li>)}</ol>
                 <p className="text-xs text-ink-2">{res.content.encouragement} {res.content.caveats}</p>

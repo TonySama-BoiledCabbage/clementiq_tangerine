@@ -38,7 +38,7 @@ export function GlobalEventsMap({ markers, selected, onSelect, prefer3d = true }
   return (
     <div className="relative h-[420px] w-full">
       {use3d ? <GlobeScene markers={markers} selected={selected} onSelect={onSelect} autoRotate={!reduced} /> : <FlatMap markers={markers} selected={selected} onSelect={onSelect} />}
-      <div className="absolute right-3 top-3 flex gap-1 rounded-xl bg-surface/90 p-1 text-[11px] font-semibold shadow">
+      <div className="absolute right-3 top-3 flex gap-1 rounded-xl bg-surface/90 p-1 text-[0.6875rem] font-semibold shadow">
         {(["3d", "2d"] as const).map((m) => (
           <button key={m} disabled={m === "3d" && !webgl} onClick={() => setMode(m)} aria-pressed={mode === m}
             className={`cursor-pointer rounded-lg px-2 py-1 ${mode === m ? "bg-peach text-tangerine" : "text-ink-2"} disabled:opacity-40`}>{m.toUpperCase()}</button>

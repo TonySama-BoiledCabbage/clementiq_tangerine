@@ -1,13 +1,14 @@
 "use client";
+import { useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Accessibility, CheckCircle2, CircleSlash, LayoutGrid, Palette, Settings, UserRound } from "lucide-react";
+import { Accessibility, Bell, CheckCircle2, CircleSlash, LayoutGrid, Palette, Plug, ShieldCheck } from "lucide-react";
 import { useSettings, useSources, useVerifiedRole } from "@/lib/hooks";
 import { useSession } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/misc";
 import { CustomizeDashboard } from "@/components/settings/CustomizeDashboard";
-import { AccessibilitySettings, AppearanceSettings, NotificationSettings, PrivacySettings, ProfileSettings } from "@/components/settings/PersonalSettings";
+import { AccessibilitySettings, AppearanceSettings, NotificationSettings, PrivacySettings } from "@/components/settings/PersonalSettings";
 import { DataSourceStatus } from "@/components/world/WorldPulse";
 
 const INTEGRATION_LABEL: Record<string, string> = {
@@ -16,14 +17,15 @@ const INTEGRATION_LABEL: Record<string, string> = {
 };
 
 const SECTIONS = [
-  { id: "profile", label: "My Profile", icon: UserRound, blurb: "Your name, role and profile picture." },
-  { id: "dashboard", label: "Customize Dashboard", icon: LayoutGrid, blurb: "Choose which tools appear on Home, their order, favorites and layout." },
-  { id: "accessibility", label: "Accessibility & Comfort", icon: Accessibility, blurb: "Motion, animation and 3D preferences." },
-  { id: "appearance", label: "Appearance & Avatar", icon: Palette, blurb: "Your orchard character, theme and orchard visuals." },
-  { id: "account", label: "Account Settings", icon: Settings, blurb: "Notifications, privacy & AI, and integrations." },
+  { id: "dashboard", label: "Customize Dashboard", icon: LayoutGrid, blurb: "Choose which tools appear on Home and in the tool switcher, their order, favorites and layout." },
+  { id: "accessibility", label: "Accessibility & Comfort", icon: Accessibility, blurb: "Text size, contrast, motion, Simple and Calm modes, chart tables and read-aloud." },
+  { id: "appearance", label: "Appearance", icon: Palette, blurb: "Theme, orchard scenery and your character's visibility." },
+  { id: "notifications", label: "Notifications", icon: Bell, blurb: "Which alerts you receive and how." },
+  { id: "privacy", label: "Privacy & AI", icon: ShieldCheck, blurb: "AI personalization, privacy mode and image consent." },
+  { id: "account", label: "Account & Integrations", icon: Plug, blurb: "Server integrations and data-source health." },
 ] as const;
 /** Older links keep working. */
-const ALIASES: Record<string, string> = { notifications: "account", privacy: "account", integrations: "account" };
+const ALIASES: Record<string, string> = { integrations: "account" };
 type SectionId = (typeof SECTIONS)[number]["id"];
 
 function Integrations() {
@@ -48,6 +50,8 @@ export default function SettingsPage() {
   const sub = useSession((s) => s.sub);
   const role = useVerifiedRole();
   const raw = params.get("section") ?? "dashboard";
+  // Profile editing lives on its own page (/profile); keep old links working.
+  useEffect(() => { if (raw === "profile") router.replace("/profile"); }, [raw, router]);
   const section = (SECTIONS.find((s) => s.id === (ALIASES[raw] ?? raw))?.id ?? "dashboard") as SectionId;
   const meta = SECTIONS.find((s) => s.id === section)!;
   const go = (id: SectionId) => router.replace(`${path}?section=${id}`, { scroll: false });
@@ -73,14 +77,9 @@ export default function SettingsPage() {
         {section === "dashboard" && <CustomizeDashboard />}
         {section === "accessibility" && <AccessibilitySettings />}
         {section === "appearance" && <AppearanceSettings />}
-        {section === "profile" && <ProfileSettings />}
-        {section === "account" && (
-          <div className="space-y-8">
-            <div><h3 className="mb-3 font-semibold text-ink">Notifications</h3><NotificationSettings /></div>
-            <div><h3 className="mb-3 font-semibold text-ink">Privacy & AI</h3><PrivacySettings /></div>
-            <div><h3 className="mb-3 font-semibold text-ink">Integrations</h3><Integrations /></div>
-          </div>
-        )}
+        {section === "notifications" && <NotificationSettings />}
+        {section === "privacy" && <PrivacySettings />}
+        {section === "account" && <Integrations />}
       </section>
     </div>
   );

@@ -7,6 +7,7 @@ import { ErrorState, Progress, Skeleton } from "@/components/ui/misc";
 import { NeedAccount, PageHeader } from "@/components/layout/PageKit";
 import { ResilienceScoreGauge } from "@/components/finance/Gauges";
 import { ChartTooltip, SERIES, axisProps, gridProps } from "@/components/finance/chart-kit";
+import { ExportReportButton } from "@/components/reports/ExportReportButton";
 
 const fmtVal = (v: number | null, unit: string) => v === null ? "n/a" : unit === "ratio" ? `${(v * 100).toFixed(0)}%` : unit === "months" ? `${v.toFixed(1)} mo` : unit === "days" ? `${v} days` : v.toFixed(2);
 
@@ -15,7 +16,8 @@ export default function ResiliencePage() {
   const { data: r, isLoading, error } = useResilience(accountId);
   return (
     <div className="space-y-6">
-      <PageHeader title="Financial Resilience Score" subtitle="An explainable, project-defined educational metric (0–100) — not a credit score or a Tangerine risk rating" />
+      <PageHeader title="Financial Resilience Score" subtitle="An explainable, project-defined educational metric (0–100) — not a credit score or a Tangerine risk rating"
+        right={<ExportReportButton report="resilience" accountId={accountId} />} />
       {!accountId && <NeedAccount />}
       {error && <ErrorState error={error} />}
       {isLoading && <Skeleton className="h-80" />}
@@ -31,7 +33,7 @@ export default function ResiliencePage() {
               <CardContent className="space-y-3">
                 {r.breakdown.map((b) => (
                   <div key={b.key}>
-                    <div className="flex items-center justify-between text-sm"><span>{b.label} <span className="text-[11px] text-ink-3">· weight {(b.weight * 100).toFixed(0)}% · {fmtVal(b.value, b.unit)}</span></span><span className="tabular font-semibold">{b.points.toFixed(1)} / {b.max_points.toFixed(0)}</span></div>
+                    <div className="flex items-center justify-between text-sm"><span>{b.label} <span className="text-[0.6875rem] text-ink-3">· weight {(b.weight * 100).toFixed(0)}% · {fmtVal(b.value, b.unit)}</span></span><span className="tabular font-semibold">{b.points.toFixed(1)} / {b.max_points.toFixed(0)}</span></div>
                     <Progress value={b.score * 100} label={b.label} />
                   </div>
                 ))}

@@ -26,12 +26,12 @@ const TAG_STYLES: Record<string, string> = {
 function Labeled({ text }: { text: string }) {
   const parts = text.split(/(\[(?:record|calculated|retrieved[^\]]*|interpretation|hypothetical)\])/gi);
   return (
-    <p className="whitespace-pre-wrap text-[13px] leading-relaxed">
+    <p className="whitespace-pre-wrap text-[0.8125rem] leading-relaxed">
       {parts.map((p, i) => {
         const m = p.match(/^\[(record|calculated|retrieved|interpretation|hypothetical)([^\]]*)\]$/i);
         if (!m) return <span key={i}>{p}</span>;
         const k = m[1].toLowerCase();
-        return <span key={i} className={cn("mx-0.5 rounded px-1 py-px text-[10px] font-semibold uppercase", TAG_STYLES[k])}>{k}{m[2]}</span>;
+        return <span key={i} className={cn("mx-0.5 rounded px-1 py-px text-[0.625rem] font-semibold uppercase", TAG_STYLES[k])}>{k}{m[2]}</span>;
       })}
     </p>
   );
@@ -82,17 +82,17 @@ export function GeminiChatPanel({ accountId, compact = false, initial }: { accou
         )}
         {msgs.map((m, i) => (
           <div key={i} className={cn("rounded-2xl px-3 py-2.5", m.role === "user" ? "ml-6 bg-tangerine text-white" : "mr-2 border border-line bg-cream")}>
-            {m.role === "user" ? <p className="text-[13px]">{m.content}</p> : <Labeled text={m.content} />}
+            {m.role === "user" ? <p className="text-[0.8125rem]">{m.content}</p> : <Labeled text={m.content} />}
             {m.meta && (
               <div className="mt-2 space-y-1.5 border-t border-line pt-2">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <EngineBadge engine={m.meta.engine} />
-                  {m.meta.tool_calls.map((t, j) => <span key={j} className="inline-flex items-center gap-1 rounded bg-surface px-1.5 py-px text-[10px] text-ink-2"><Wrench className="size-2.5" />{t.name}</span>)}
-                  {m.meta.number_check && !m.meta.number_check.ok && <span className="text-[10px] font-semibold text-warn">Unverified figures: {m.meta.number_check.unverified.join(", ")} — rely on the dashboards.</span>}
+                  {m.meta.tool_calls.map((t, j) => <span key={j} className="inline-flex items-center gap-1 rounded bg-surface px-1.5 py-px text-[0.625rem] text-ink-2"><Wrench className="size-2.5" />{t.name}</span>)}
+                  {m.meta.number_check && !m.meta.number_check.ok && <span className="text-[0.625rem] font-semibold text-warn">Unverified figures: {m.meta.number_check.unverified.join(", ")} — rely on the dashboards.</span>}
                 </div>
                 {m.meta.citations.length > 0 && (
                   <ul className="space-y-0.5">{m.meta.citations.map((c, j) => (
-                    <li key={j} className="text-[11px] text-ink-2">↳ <a href={c.url} target="_blank" rel="noopener noreferrer" className="underline hover:text-tangerine">{c.headline}</a> — {c.publisher}, {c.published?.slice(0, 10)}</li>
+                    <li key={j} className="text-[0.6875rem] text-ink-2">↳ <a href={c.url} target="_blank" rel="noopener noreferrer" className="underline hover:text-tangerine">{c.headline}</a> — {c.publisher}, {c.published?.slice(0, 10)}</li>
                   ))}</ul>
                 )}
               </div>

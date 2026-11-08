@@ -15,10 +15,10 @@ export function CalcInfo({ calc, title }: { calc?: Calc; title: string }) {
         <dl className="space-y-3 text-sm">
           <div><dt className="text-xs font-semibold text-ink-2">Formula</dt><dd><code className="rounded bg-peach px-2 py-1 text-xs">{calc.formula}</code></dd></div>
           <div><dt className="text-xs font-semibold text-ink-2">Output</dt><dd className="tabular">{calc.value?.toLocaleString("en-CA", { maximumFractionDigits: 4 })} {calc.unit}</dd></div>
-          <div><dt className="text-xs font-semibold text-ink-2">Inputs</dt><dd><pre className="max-h-40 overflow-auto rounded-lg bg-cream p-2 text-[11px]">{JSON.stringify(calc.inputs, null, 1)}</pre></dd></div>
+          <div><dt className="text-xs font-semibold text-ink-2">Inputs</dt><dd><pre className="max-h-40 overflow-auto rounded-lg bg-cream p-2 text-[0.6875rem]">{JSON.stringify(calc.inputs, null, 1)}</pre></dd></div>
           {calc.assumptions.length > 0 && <div><dt className="text-xs font-semibold text-ink-2">Assumptions</dt><dd><ul className="list-disc pl-4 text-xs">{calc.assumptions.map((a) => <li key={a}>{a}</li>)}</ul></dd></div>}
           {calc.warnings.length > 0 && <div><dt className="text-xs font-semibold text-warn">Missing-data warnings</dt><dd className="text-xs">{calc.warnings.join("; ")}</dd></div>}
-          <div className="text-[11px] text-ink-3">Source: {calc.provenance} · engine {calc.engine} · computed {dateTime(calc.computed_at)}</div>
+          <div className="text-[0.6875rem] text-ink-3">Source: {calc.provenance} · engine {calc.engine} · computed {dateTime(calc.computed_at)}</div>
         </dl>
       </DialogContent>
     </Dialog>
@@ -42,7 +42,7 @@ export function FinancialMetricCard({ label, value, sub, icon: Icon, tone = "ora
       </div>
       <p className="mt-3 text-xs font-medium text-ink-2">{label}</p>
       <p className="tabular mt-0.5 text-2xl font-bold tracking-tight text-ink">{value}</p>
-      {sub && <div className="mt-1 text-[11px] text-ink-2">{sub}</div>}
+      {sub && <div className="mt-1 text-[0.6875rem] text-ink-2">{sub}</div>}
       {footer}
     </Card>
   );

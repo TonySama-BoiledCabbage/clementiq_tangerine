@@ -58,7 +58,7 @@ function LoginForm() {
             className={cn("cursor-pointer rounded-2xl border p-3 text-left transition", role === r.id ? "border-tangerine bg-peach" : "border-line hover:border-tangerine/50")}>
             <r.icon className={cn("mb-1 size-5", role === r.id ? "text-tangerine" : "text-ink-3")} />
             <p className="text-sm font-semibold">{r.label}</p>
-            <p className="text-[11px] text-ink-2">{r.desc}</p>
+            <p className="text-[0.6875rem] text-ink-2">{r.desc}</p>
           </button>
         ))}
       </div>
@@ -73,7 +73,7 @@ function LoginForm() {
         <div>
           <Label htmlFor="dname">Your name (optional)</Label>
           <Input id="dname" placeholder="e.g. Nadia" autoComplete="given-name" {...register("display_name")} />
-          <p className="mt-1 text-[11px] text-ink-3">Keeps your dashboard layout, theme and avatar separate from other people using the same access code.</p>
+          <p className="mt-1 text-[0.6875rem] text-ink-3">Keeps your dashboard layout, theme and avatar separate from other people using the same access code.</p>
           {errors.display_name && <p className="mt-1 text-xs text-bad">{errors.display_name.message}</p>}
         </div>
       )}
@@ -84,7 +84,7 @@ function LoginForm() {
           <Input id="code" type="text" autoComplete="off" spellCheck={false} placeholder={`e.g. tangerine-${role}`} className="pl-9" {...register("access_code")} />
         </div>
         {errors.access_code && <p className="mt-1 text-xs text-bad">{errors.access_code.message}</p>}
-        {showCodes && <p className="mt-1 text-[11px] text-ink-3">Development codes (from .env.example): judge <code>tangerine-judge</code> · customer <code>tangerine-customer</code> · admin <code>tangerine-admin</code></p>}
+        {showCodes && <p className="mt-1 text-[0.6875rem] text-ink-3">Development codes (from .env.example): judge <code>tangerine-judge</code> · customer <code>tangerine-customer</code> · admin <code>tangerine-admin</code></p>}
       </div>
       {err && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-200">{err}</p>}
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>{isSubmitting ? "Signing in…" : "Sign in"}</Button>

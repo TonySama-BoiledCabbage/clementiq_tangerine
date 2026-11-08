@@ -36,8 +36,8 @@ export function ImportStatusPanel() {
             <Card key={d.dataset} className="p-4">
               <div className="flex items-center justify-between"><p className="font-semibold">{d.file}</p>
                 {!r ? <Badge><Clock /> never</Badge> : r.status === "success" ? <Badge tone="good"><CheckCircle2 /> {rep.skipped ? "unchanged" : "loaded"}</Badge> : r.status === "running" ? <Badge tone="warn"><Spinner /> running</Badge> : <Badge tone="bad"><XCircle /> failed</Badge>}</div>
-              <p className="text-[11px] text-ink-3">→ table <code>{d.table}</code> · {d.rows_in_db.toLocaleString()} rows in DB</p>
-              {r && <dl className="mt-2 grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px]">
+              <p className="text-[0.6875rem] text-ink-3">→ table <code>{d.table}</code> · {d.rows_in_db.toLocaleString()} rows in DB</p>
+              {r && <dl className="mt-2 grid grid-cols-2 gap-x-2 gap-y-0.5 text-[0.6875rem]">
                 <dt className="text-ink-2">Rows read</dt><dd className="tabular text-right">{r.rows_read.toLocaleString()}</dd>
                 <dt className="text-ink-2">Rows loaded</dt><dd className="tabular text-right">{r.rows_loaded.toLocaleString()}</dd>
                 <dt className="text-ink-2">Duplicates dropped</dt><dd className="tabular text-right">{String(rep.duplicates_dropped ?? 0)}</dd>
@@ -47,10 +47,10 @@ export function ImportStatusPanel() {
                 <dt className="text-ink-2">Currency reformatted</dt><dd className="tabular text-right">{String(rep.money_reformatted ?? 0)}</dd>
                 <dt className="text-ink-2">Seconds</dt><dd className="tabular text-right">{String(rep.seconds ?? "—")}</dd>
               </dl>}
-              {Array.isArray(rep.consistency) && (rep.consistency as string[]).map((c) => <p key={c} className="mt-1 text-[10px] text-ink-3">✓ {c}</p>)}
-              {!!rep.nulls && Object.keys(rep.nulls as object).length > 0 && <p className="mt-1 text-[10px] text-ink-3">Nullable fields: {Object.entries(rep.nulls as Record<string, number>).map(([k, v]) => `${k} (${v})`).join(", ")}</p>}
-              {r?.error && <p className="mt-1 text-[11px] text-bad">{r.error}</p>}
-              {r && <p className="mt-1 text-[10px] text-ink-3">{dateTime(r.finished_at ?? r.started_at)}</p>}
+              {Array.isArray(rep.consistency) && (rep.consistency as string[]).map((c) => <p key={c} className="mt-1 text-[0.625rem] text-ink-3">✓ {c}</p>)}
+              {!!rep.nulls && Object.keys(rep.nulls as object).length > 0 && <p className="mt-1 text-[0.625rem] text-ink-3">Nullable fields: {Object.entries(rep.nulls as Record<string, number>).map(([k, v]) => `${k} (${v})`).join(", ")}</p>}
+              {r?.error && <p className="mt-1 text-[0.6875rem] text-bad">{r.error}</p>}
+              {r && <p className="mt-1 text-[0.625rem] text-ink-3">{dateTime(r.finished_at ?? r.started_at)}</p>}
             </Card>
           );
         })}

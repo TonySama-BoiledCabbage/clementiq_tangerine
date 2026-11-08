@@ -9,6 +9,7 @@ import { Select } from "@/components/ui/input";
 import { ErrorState, Skeleton } from "@/components/ui/misc";
 import { NeedAccount, PageHeader } from "@/components/layout/PageKit";
 import { FinancialDigitalTwin } from "@/components/twin/FinancialDigitalTwin";
+import { ExportReportButton } from "@/components/reports/ExportReportButton";
 
 interface Timeline { events: { date: string; type: string; title: string; detail?: string; source: string }[] }
 const ICON: Record<string, React.ElementType> = { account: PiggyBank, card: CreditCard, loan: Landmark, anomaly: AlertTriangle, overdraft: TrendingDown };
@@ -27,7 +28,8 @@ export default function TimelinePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Financial Timeline" subtitle="Your recorded history, then Clement Core’s modeled future under a chosen scenario" />
+      <PageHeader title="Financial Timeline" subtitle="Your recorded history, then Clement Core’s modeled future under a chosen scenario"
+        right={<ExportReportButton report="timeline" accountId={accountId} />} />
       {!accountId && <NeedAccount />}
       {summary.error && <ErrorState error={summary.error} />}
       {accountId && (
@@ -40,13 +42,13 @@ export default function TimelinePage() {
               </Select>
             </CardHeader>
             <CardContent>{summary.data ? <FinancialDigitalTwin summary={summary.data} sim={sim.data} /> : <Skeleton className="h-96" />}
-              {sim.data && <p className="mt-2 text-[11px] text-ink-3">Projection assumptions: {sim.data.assumptions.join(" ")}</p>}</CardContent>
+              {sim.data && <p className="mt-2 text-[0.6875rem] text-ink-3">Projection assumptions: {sim.data.assumptions.join(" ")}</p>}</CardContent>
           </Card>
           <Card>
             <CardHeader><div><CardTitle>Events from your records</CardTitle><CardDescription>{events.length} events</CardDescription></div>
               <div className="flex flex-wrap gap-1">{Object.keys(ICON).map((t) => (
                 <button key={t} aria-pressed={types.has(t)} onClick={() => { const n = new Set(types); n.has(t) ? n.delete(t) : n.add(t); setTypes(n); }}
-                  className={`cursor-pointer rounded-full border px-2.5 py-0.5 text-[11px] capitalize ${types.has(t) ? "border-tangerine text-tangerine" : "border-line text-ink-3"}`}>{t}</button>
+                  className={`cursor-pointer rounded-full border px-2.5 py-0.5 text-[0.6875rem] capitalize ${types.has(t) ? "border-tangerine text-tangerine" : "border-line text-ink-3"}`}>{t}</button>
               ))}</div></CardHeader>
             <CardContent>
               {tl.isLoading && <Skeleton className="h-40" />}
@@ -54,8 +56,8 @@ export default function TimelinePage() {
                 {events.map((e, i) => { const I = ICON[e.type] ?? AlertTriangle; return (
                   <li key={i} className="mb-4 ml-5">
                     <span className={`absolute -left-3 grid size-6 place-items-center rounded-full ${TONE[e.type] ?? "bg-slate-100"}`}><I className="size-3.5" /></span>
-                    <p className="text-[11px] text-ink-3">{e.date}</p><p className="text-sm font-medium">{e.title}</p>
-                    <p className="text-[11px] text-ink-2">{e.detail ? `${e.detail} · ` : ""}{e.source}</p>
+                    <p className="text-[0.6875rem] text-ink-3">{e.date}</p><p className="text-sm font-medium">{e.title}</p>
+                    <p className="text-[0.6875rem] text-ink-2">{e.detail ? `${e.detail} · ` : ""}{e.source}</p>
                   </li>); })}
               </ol>
             </CardContent>

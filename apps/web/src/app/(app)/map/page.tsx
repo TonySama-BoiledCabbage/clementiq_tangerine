@@ -38,7 +38,7 @@ export default function MapPage() {
             <GlobalEventsMap markers={markers.map((x) => ({ iso3: x.iso3, name: x.name, lat: x.lat, lon: x.lon, count: x.event_count, hasIndicators: x.indicators.length > 0 }))}
               selected={sel} onSelect={setSel} prefer3d={settings.data?.preferences.display.enable_3d ?? true} />
           ) : <div className="p-6"><EmptyState icon={MapPin} title="No located developments yet">Markers appear after WorldPulse retrieves data. Coordinates come only from the World Bank country API — never invented.</EmptyState></div>}
-          <p className="px-3 pb-2 pt-1 text-[11px] text-ink-3">{q.data?.coordinate_source} · {q.data?.note} · <span className="text-tangerine">●</span> events <span className="text-invest">●</span> indicators only</p>
+          <p className="px-3 pb-2 pt-1 text-[0.6875rem] text-ink-3">{q.data?.coordinate_source} · {q.data?.note} · <span className="text-tangerine">●</span> events <span className="text-invest">●</span> indicators only</p>
         </Card>
         <Card>
           <CardHeader><div><CardTitle>{m ? `${m.name}` : "Select a country"}</CardTitle><CardDescription>{m ? `${m.region ?? ""} · capital ${m.capital ?? "—"}` : "Click a marker on the globe or choose below"}</CardDescription></div></CardHeader>
@@ -52,7 +52,7 @@ export default function MapPage() {
                 <ul className="max-h-96 space-y-2 overflow-y-auto">{m.events.map((e) => (
                   <li key={e.id} className="rounded-xl border border-line p-2.5">
                     <a href={e.url} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold hover:text-tangerine">{e.headline}</a>
-                    <p className="text-[10px] text-ink-2">{e.source_name} · {date(e.published_at)} · {e.location_basis}</p>
+                    <p className="text-[0.625rem] text-ink-2">{e.source_name} · {date(e.published_at)} · {e.location_basis}</p>
                     <div className="mt-1 flex flex-wrap items-center gap-1"><Badge tone="orange">{e.topic_label}</Badge>{e.exposure_categories.slice(0, 3).map((c) => <Badge key={c}>{c.replace(/_/g, " ")}</Badge>)}</div>
                     <Button asChild size="sm" variant="secondary" className="mt-2"><Link href={`/worldpulse?event=${e.id}&topic=${e.topic}`}>Simulate scenario</Link></Button>
                   </li>

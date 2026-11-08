@@ -52,13 +52,13 @@ export function AlertPreferences() {
         <label className="flex items-center justify-between text-sm">Email alerts<Switch checked={p.channels.email.opt_in} onCheckedChange={(v) => setP({ ...p, channels: { ...p.channels, email: { ...p.channels.email, opt_in: v } } })} /></label>
         {p.channels.email.opt_in && <Input type="email" placeholder="you@example.com" value={p.channels.email.address ?? ""} onChange={(e) => setP({ ...p, channels: { ...p.channels, email: { ...p.channels.email, address: e.target.value } } })} />}
         <label className="flex items-center justify-between text-sm">Browser notifications<Switch checked={p.channels.browser_push.opt_in} onCheckedChange={requestPush} /></label>
-        <p className="text-[11px] text-ink-3">Email is sent only when SMTP is configured on the server. Turn either switch off at any time to unsubscribe.</p>
+        <p className="text-[0.6875rem] text-ink-3">Email is sent only when SMTP is configured on the server. Turn either switch off at any time to unsubscribe.</p>
       </div>
       <div><p className="mb-2 text-xs font-semibold text-ink-2">Topics I care about (raises relevance)</p>
         <div className="flex flex-wrap gap-1.5">{INTERESTS.map((t) => { const on = p.interests.includes(t); return (
           <button key={t} aria-pressed={on} onClick={() => setP({ ...p, interests: on ? p.interests.filter((x) => x !== t) : [...p.interests, t] })}
             className={`cursor-pointer rounded-full border px-3 py-1 text-xs ${on ? "border-tangerine bg-peach text-tangerine" : "border-line text-ink-2"}`}>{t.replace(/_/g, " ")}</button>); })}</div>
-        <p className="mt-1 text-[11px] text-ink-3">Political views are never inferred or used for targeting.</p></div>
+        <p className="mt-1 text-[0.6875rem] text-ink-3">Political views are never inferred or used for targeting.</p></div>
       <Button onClick={() => save.mutate({ alerts: p.alerts, channels: p.channels, interests: p.interests })} disabled={save.isPending}>{save.isPending && <Spinner />} Save preferences</Button>
       {save.isSuccess && <span className="ml-2 text-xs text-good">Saved ✓</span>}
       {save.error && <p className="text-xs text-bad">{(save.error as Error).message}</p>}

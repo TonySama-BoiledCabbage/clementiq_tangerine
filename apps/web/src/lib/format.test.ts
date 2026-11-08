@@ -24,3 +24,22 @@ describe("shared schemas", () => {
     expect(SolanaAddressSchema.safeParse("0xabc").success).toBe(false);
   });
 });
+
+describe("privacy mode and read-aloud", () => {
+  it("masks every amount, including compact chart labels", async () => {
+    const f = await import("./format");
+    f.setMoneyMask(true);
+    expect(f.money(17611.86)).toBe("$••••");
+    expect(f.signedMoney(-2260)).toBe("$••••");
+    expect(f.compactMoney(30000)).toBe("••••");
+    expect(f.money(null)).toBe("—");
+    f.setMoneyMask(false);
+    expect(f.money(17611.86)).toBe("$17,612");
+  });
+  it("never speaks amounts unless allowed", async () => {
+    const { speakable } = await import("./format");
+    const t = "Income is $6,339 and spending is $8,600.50; masked $•••• too.";
+    expect(speakable(t, false)).toBe("Income is an amount and spending is an amount; masked an amount too.");
+    expect(speakable(t, true)).toContain("$6,339");
+  });
+});

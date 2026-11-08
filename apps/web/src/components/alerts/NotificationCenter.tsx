@@ -35,7 +35,7 @@ export function NotificationCenter({ className }: { className?: string }) {
     <DropdownMenu>
       <DropdownMenuTrigger aria-label={`Notifications, ${unread} unread`} className={cn("relative grid size-9 cursor-pointer place-items-center rounded-full", className)}>
         <Bell className="size-[18px]" />
-        {unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-tangerine px-1 text-[10px] font-bold text-white ring-2 ring-white">{unread > 99 ? "99+" : unread}</span>}
+        {unread > 0 && <span className="absolute -right-0.5 -top-0.5 grid min-w-5 place-items-center rounded-full bg-tangerine px-1 text-[0.625rem] font-bold text-white ring-2 ring-white">{unread > 99 ? "99+" : unread}</span>}
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-[min(92vw,380px)] p-0">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
@@ -50,12 +50,12 @@ export function NotificationCenter({ className }: { className?: string }) {
           {data?.items.map((a: Alert) => (
             <li key={a.id} className={`border-b border-line px-4 py-3 last:border-0 ${a.is_read ? "" : "bg-peach/50"}`}>
               <div className="flex items-start justify-between gap-2">
-                <Link href={a.simulation_link || "/alerts"} className="text-[13px] font-semibold leading-snug hover:text-tangerine"
+                <Link href={a.simulation_link || "/alerts"} className="text-[0.8125rem] font-semibold leading-snug hover:text-tangerine"
                   onClick={() => !a.is_read && mark.mutate({ id: a.id, is_read: true })}>{a.title}</Link>
                 <SeverityBadge s={a.severity} />
               </div>
               <p className="mt-1 line-clamp-2 text-xs text-ink-2">{a.relevance}</p>
-              <p className="mt-1 text-[10px] text-ink-3">{a.source} · {timeAgo(a.created_at)}</p>
+              <p className="mt-1 text-[0.625rem] text-ink-3">{a.source} · {timeAgo(a.created_at)}</p>
             </li>
           ))}
         </ul>

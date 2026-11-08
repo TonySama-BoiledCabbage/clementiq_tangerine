@@ -29,17 +29,17 @@ export function WorldPulseNewsCard({ e, onSimulate, selected }: { e: NewsEvent; 
         {e.source_type === "official" ? <Badge tone="good"><Landmark /> Official statistic</Badge> : <Badge tone="neutral"><Newspaper /> News report</Badge>}
         <Badge tone={CLASS_TONE[e.classification] ?? "neutral"}>{e.classification}</Badge>
         <Badge tone="orange">{e.topic_label}</Badge>
-        {e.country && <span className="text-[11px] text-ink-3">{e.country}</span>}
+        {e.country && <span className="text-[0.6875rem] text-ink-3">{e.country}</span>}
       </div>
-      <a href={e.url} target="_blank" rel="noopener noreferrer" className="group text-[15px] font-semibold leading-snug hover:text-tangerine">
+      <a href={e.url} target="_blank" rel="noopener noreferrer" className="group text-[0.9375rem] font-semibold leading-snug hover:text-tangerine">
         {e.headline} <ExternalLink className="inline size-3 opacity-50 group-hover:opacity-100" />
       </a>
-      <p className="mt-1 text-[11px] text-ink-2">{e.source_name} · published {date(e.published_at)}{e.event_date && ` · event ${date(e.event_date)}`} · retrieved {timeAgo(e.retrieved_at)}</p>
-      {e.summary && <p className="mt-2 text-sm text-ink">{e.summary} {e.summary_engine && <span className="text-[10px] text-ink-3">({e.summary_engine})</span>}</p>}
+      <p className="mt-1 text-[0.6875rem] text-ink-2">{e.source_name} · published {date(e.published_at)}{e.event_date && ` · event ${date(e.event_date)}`} · retrieved {timeAgo(e.retrieved_at)}</p>
+      {e.summary && <p className="mt-2 text-sm text-ink">{e.summary} {e.summary_engine && <span className="text-[0.625rem] text-ink-3">({e.summary_engine})</span>}</p>}
       {e.exposure_categories.length > 0 && <p className="mt-2 text-xs text-ink-2">Possible exposure: {e.exposure_categories.map((c) => c.replace(/_/g, " ")).join(", ")}</p>}
-      {e.confidence_note && <p className="mt-1 text-[11px] italic text-ink-3">{e.confidence_note}</p>}
+      {e.confidence_note && <p className="mt-1 text-[0.6875rem] italic text-ink-3">{e.confidence_note}</p>}
       <div className="mt-3 flex items-center justify-between">
-        <span className="text-[10px] text-ink-3">Source reliability {Math.round(e.reliability * 100)}%</span>
+        <span className="text-[0.625rem] text-ink-3">Source reliability {Math.round(e.reliability * 100)}%</span>
         {onSimulate && <Button size="sm" variant="secondary" onClick={() => onSimulate(e)}>Simulate impact</Button>}
       </div>
     </Card>
@@ -59,7 +59,7 @@ export function EconomicIndicatorCard({ i }: { i: Indicator }) {
         <LineChart data={i.history}><YAxis hide domain={["auto", "auto"]} /><Tooltip content={<ChartTooltip fmt={(v) => v.toLocaleString("en-CA", { maximumFractionDigits: 3 })} />} />
           <Line dataKey="value" name={i.unit} stroke={SERIES.income} strokeWidth={2} dot={false} /></LineChart>
       </ResponsiveContainer></div>
-      <p className="mt-1 text-[10px] text-ink-3">As of {i.latest.date} · <a className="underline" href={i.source_url} target="_blank" rel="noopener noreferrer">{i.source.replace(/_/g, " ")}</a></p>
+      <p className="mt-1 text-[0.625rem] text-ink-3">As of {i.latest.date} · <a className="underline" href={i.source_url} target="_blank" rel="noopener noreferrer">{i.source.replace(/_/g, " ")}</a></p>
     </Card>
   );
 }
@@ -122,7 +122,7 @@ export function EventImpactSimulator({ accountId, topics, initial }: { accountId
           <div className="grid grid-cols-3 gap-1 rounded-xl bg-peach p-1">{(["low", "medium", "high"] as const).map((l) => (
             <button key={l} onClick={() => setLevel(l)} aria-pressed={level === l} className={cn("cursor-pointer rounded-lg py-1.5 text-xs font-semibold capitalize", level === l ? "bg-surface text-tangerine shadow-sm" : "text-ink-2")}>{l}</button>
           ))}</div></div>
-        <p className="text-[11px] text-ink-3">A global price change never flows one-for-one into a household budget. Clement Core applies explicit pass-through assumptions per spending channel.</p>
+        <p className="text-[0.6875rem] text-ink-3">A global price change never flows one-for-one into a household budget. Clement Core applies explicit pass-through assumptions per spending channel.</p>
       </Card>
       <div className="space-y-4">
         {q.error && <ErrorState error={q.error} />}
@@ -133,8 +133,8 @@ export function EventImpactSimulator({ accountId, topics, initial }: { accountId
               <div className="mt-3 grid gap-4 md:grid-cols-[1fr_200px]">
                 <div className="space-y-2">
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-xl bg-cream p-3"><p className="text-[11px] text-ink-2">Additional monthly spending</p><p className="tabular text-xl font-bold">{signedMoney(r.additional_monthly_spending)}</p></div>
-                    <div className="rounded-xl bg-cream p-3"><p className="text-[11px] text-ink-2">New monthly surplus / shortfall</p><p className={cn("tabular text-xl font-bold", r.scenario.surplus < 0 ? "text-bad" : "text-good")}>{signedMoney(r.scenario.surplus)}</p></div>
+                    <div className="rounded-xl bg-cream p-3"><p className="text-[0.6875rem] text-ink-2">Additional monthly spending</p><p className="tabular text-xl font-bold">{signedMoney(r.additional_monthly_spending)}</p></div>
+                    <div className="rounded-xl bg-cream p-3"><p className="text-[0.6875rem] text-ink-2">New monthly surplus / shortfall</p><p className={cn("tabular text-xl font-bold", r.scenario.surplus < 0 ? "text-bad" : "text-good")}>{signedMoney(r.scenario.surplus)}</p></div>
                   </div>
                   {r.additional_monthly_income !== 0 && <p className="text-xs text-ink-2">Savings interest change: {signedMoney(r.additional_monthly_income)}/month</p>}
                   <table className="w-full text-xs">
@@ -156,8 +156,8 @@ export function EventImpactSimulator({ accountId, topics, initial }: { accountId
                   <tbody>{Object.entries(r.levels).map(([k, v]) => (
                     <tr key={k} className={cn("border-t border-line", k === level && "font-semibold text-tangerine")}><td className="py-1.5 capitalize">{k}</td><td className="tabular text-right">{money(v.additional_monthly_spending)}</td><td className="tabular text-right">{signedMoney(v.surplus)}</td><td className="tabular text-right">{v.runway.display}</td></tr>
                   ))}</tbody></table>
-                {r.investment_channels.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Investment transmission channels (qualitative)</p>{r.investment_channels.map((c) => <p key={c.channel} className="text-[11px] text-ink-2">• <b>{c.asset}</b>: {c.channel}</p>)}</div>}
-                <details className="mt-3 text-[11px] text-ink-2"><summary className="cursor-pointer font-semibold">Assumptions & limitations</summary>{[...r.assumptions, ...r.limitations].map((a) => <p key={a} className="mt-1">• {a}</p>)}</details>
+                {r.investment_channels.length > 0 && <div className="mt-3"><p className="text-xs font-semibold">Investment transmission channels (qualitative)</p>{r.investment_channels.map((c) => <p key={c.channel} className="text-[0.6875rem] text-ink-2">• <b>{c.asset}</b>: {c.channel}</p>)}</div>}
+                <details className="mt-3 text-[0.6875rem] text-ink-2"><summary className="cursor-pointer font-semibold">Assumptions & limitations</summary>{[...r.assumptions, ...r.limitations].map((a) => <p key={a} className="mt-1">• {a}</p>)}</details>
               </Card>
               <AIInsightCard title="Explain this development" endpoint="/worldpulse/impact" kind="scenario" key={JSON.stringify(body)} body={{ ...body, explain: true }} />
             </div>

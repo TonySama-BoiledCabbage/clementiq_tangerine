@@ -15,7 +15,7 @@ export function RangeControl({ value, onChange }: { value: Range; onChange: (r: 
     <div className="inline-flex rounded-xl bg-peach p-1" role="group" aria-label="Date range">
       {RANGES.map((r) => (
         <button key={r.id} onClick={() => onChange(r.id)} aria-pressed={value === r.id}
-          className={`cursor-pointer rounded-lg px-2.5 py-1 text-[11px] font-semibold ${value === r.id ? "bg-surface text-tangerine shadow-sm" : "text-ink-2"}`}>{r.label}</button>
+          className={`cursor-pointer rounded-lg px-2.5 py-1 text-[0.6875rem] font-semibold ${value === r.id ? "bg-surface text-tangerine shadow-sm" : "text-ink-2"}`}>{r.label}</button>
       ))}
     </div>
   );
@@ -48,7 +48,7 @@ export function IncomeExpenseChart({ series, height = 260, defaultRange = "12M" 
         <Legend items={[{ label: "Money in", color: SERIES.income }, { label: "Money out", color: SERIES.spending }, { label: "Fixed costs", color: SERIES.fixed, dashed: true }]} />
         <div className="flex gap-2">
           <select aria-label="Granularity" value={grain} onChange={(e) => setGrain(e.target.value as "month" | "quarter")}
-            className="h-8 rounded-lg border border-line bg-surface px-2 text-[11px] font-semibold text-ink-2">
+            className="h-8 rounded-lg border border-line bg-surface px-2 text-[0.6875rem] font-semibold text-ink-2">
             <option value="month">Monthly</option><option value="quarter">Quarterly totals</option>
           </select>
           <RangeControl value={range} onChange={setRange} />
@@ -94,7 +94,7 @@ export function NetWorthChart({ data, label, height = 220 }: { data: { month: st
           {hasLoan && <Line type="monotone" dataKey="balance" name="Month-end balance" stroke={SERIES.income} strokeDasharray="5 4" strokeWidth={2} dot={false} />}
         </AreaChart>
       </ResponsiveContainer>
-      <p className="mt-1 text-[11px] text-ink-3">{label}</p>
+      <p className="mt-1 text-[0.6875rem] text-ink-3">{label}</p>
     </div>
   );
 }
@@ -116,7 +116,7 @@ export function ScenarioComparisonChart({ sim, height = 260 }: { sim: SimResult;
           <Line type="monotone" dataKey="scenario_balance" name="With shock" stroke={SERIES.scenario} strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
         </LineChart>
       </ResponsiveContainer>
-      <p className="text-[11px] text-ink-3">Projection assumes typical (median) months repeat. Illustrative; the runway number above is the authoritative result.</p>
+      <p className="text-[0.6875rem] text-ink-3">Projection assumes typical (median) months repeat. Illustrative; the runway number above is the authoritative result.</p>
     </div>
   );
 }

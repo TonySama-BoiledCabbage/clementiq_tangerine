@@ -12,7 +12,6 @@ import type { Growth } from "@/lib/growth";
 import { cn } from "@/lib/utils";
 import { OrchardBackground } from "./OrchardBackground";
 import { MoneyTrees } from "./MoneyTrees";
-import { OrchardCharacter, type CharacterMode } from "./OrchardCharacter";
 
 export const PHOTO_BACKGROUND = "/orchard/photo.jpg";
 
@@ -40,9 +39,11 @@ function FloatingCoins() {
   );
 }
 
-export function OrchardScene({ appearance, growth, character, celebrate, className, children }: {
-  appearance: Appearance; growth: Growth; character: { mode: CharacterMode; url: string | null; transparent?: boolean };
-  celebrate?: boolean; className?: string; children?: React.ReactNode;
+/** Decorative layers 1–2 sit absolutely behind the content and never take pointer events.
+ *  Everything passed as children (character, hero text, toolbars) stays in normal document flow,
+ *  so the scene grows with its content instead of overlapping what comes next. */
+export function OrchardScene({ appearance, growth, celebrate, className, children }: {
+  appearance: Appearance; growth: Growth; celebrate?: boolean; className?: string; children?: React.ReactNode;
 }) {
   const reduced = usePrefersReducedMotion();
   const photoOk = usePhotoAvailable(appearance.orchard_enabled && appearance.orchard_style === "photo");
@@ -51,11 +52,11 @@ export function OrchardScene({ appearance, growth, character, celebrate, classNa
   const vibe = 0.92 + growth.vibrance * 0.12;
 
   if (!appearance.orchard_enabled) {
-    return <div className={cn("relative overflow-hidden peach-gradient", className)}>{children}</div>;
+    return <div className={cn("relative peach-gradient", className)}>{children}</div>;
   }
   return (
-    <div className={cn("orchard relative overflow-hidden", className)} data-anim={animOn ? "on" : "off"} data-intensity={appearance.animation_intensity}>
-      <div className="absolute inset-0 dark:brightness-[0.78]" style={{ filter: `saturate(${vibe}) brightness(${0.96 + growth.vibrance * 0.06})` }}>
+    <div className={cn("orchard relative isolate", className)} data-anim={animOn ? "on" : "off"} data-intensity={appearance.animation_intensity}>
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden dark:brightness-[0.78]" aria-hidden style={{ filter: `saturate(${vibe}) brightness(${0.96 + growth.vibrance * 0.06})` }}>
         {usePhoto
           // eslint-disable-next-line @next/next/no-img-element
           ? <img src={PHOTO_BACKGROUND} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -65,17 +66,16 @@ export function OrchardScene({ appearance, growth, character, celebrate, classNa
         {appearance.floating_coins && animOn && <FloatingCoins />}
       </div>
       {/* soft fade into the page so the cards panel sits naturally on the orchard */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-[var(--page)]" aria-hidden />
-      <OrchardCharacter mode={character.mode} url={character.url} transparent={character.transparent} />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-24 bg-gradient-to-b from-transparent to-[var(--page)]" aria-hidden />
       {celebrate && (
-        <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
           {[[30, 40], [45, 30], [60, 45], [72, 28], [52, 55]].map(([l, t], i) => (
             <span key={i} className="anim-pop absolute block size-16 rounded-full" style={{ left: `${l}%`, top: `${t}%`, animationDelay: `${i * 0.15}s`,
               background: "radial-gradient(circle, rgba(255,240,160,0.95), rgba(255,180,60,0) 70%)" }} />
           ))}
         </div>
       )}
-      <div className="relative z-10 h-full">{children}</div>
+      {children}
     </div>
   );
 }

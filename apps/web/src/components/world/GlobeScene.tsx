@@ -34,7 +34,7 @@ function Marker({ m, selected, onSelect }: { m: GlobeMarker; selected: boolean; 
       </mesh>
       {(hover || selected) && (
         <Html distanceFactor={7} center style={{ pointerEvents: "none" }}>
-          <div className="whitespace-nowrap rounded-lg bg-white px-2 py-1 text-[11px] font-semibold text-slate-900 shadow">{m.name} · {m.count} events{m.hasIndicators ? " · indicators" : ""}</div>
+          <div className="whitespace-nowrap rounded-lg bg-white px-2 py-1 text-[0.6875rem] font-semibold text-slate-900 shadow">{m.name} · {m.count} events{m.hasIndicators ? " · indicators" : ""}</div>
         </Html>
       )}
     </group>

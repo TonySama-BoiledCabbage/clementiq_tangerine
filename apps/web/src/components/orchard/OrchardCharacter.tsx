@@ -93,18 +93,15 @@ function PhotoPortrait({ url }: { url: string }) {
   );
 }
 
-export function OrchardCharacter({ mode, url, transparent }: { mode: CharacterMode; url: string | null; transparent?: boolean }) {
+/** Layer 3. Rendered in normal flow by the page (no absolute positioning), so it can never cover text. */
+export function OrchardCharacter({ mode, url, transparent, className }: { mode: CharacterMode; url: string | null; transparent?: boolean; className?: string }) {
   const effective: CharacterMode = mode !== "default" && url ? mode : "default";
   return (
-    <div className={cn("anim-bob pointer-events-none absolute right-[2%] sm:right-auto sm:left-[6%] md:left-[18%]",
-      effective === "photo"
-        ? "bottom-[110px] h-[34%] sm:bottom-[110px] sm:h-[46%] lg:bottom-[100px] lg:h-[58%]"   // framed portrait: smaller, clear of the toolbar
-        : "bottom-[104px] h-[40%] sm:bottom-[96px] sm:h-[62%] lg:bottom-[40px] lg:h-[80%]")}
-      data-character={effective}>
-      {effective === "photo" && url && <PhotoPortrait url={url} />}
+    <div className={cn("anim-bob pointer-events-none flex items-end justify-center", className)} data-character={effective}>
+      {effective === "photo" && url && <div className="h-[86%]"><PhotoPortrait url={url} /></div>}
       {effective === "generated" && url && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={url} alt="Your personalised orchard character" className="h-full w-auto object-contain"
+        <img src={url} alt="Your personalised orchard character" className="h-full w-auto max-w-full object-contain"
           style={transparent
             ? { aspectRatio: "1 / 1", filter: "drop-shadow(0 14px 22px rgba(120,60,10,0.35))" }
             : { aspectRatio: "1 / 1", maskImage: "radial-gradient(ellipse 50% 52% at 50% 48%, #000 62%, transparent 100%)",
