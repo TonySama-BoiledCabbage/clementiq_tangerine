@@ -22,7 +22,7 @@ export default function PlanPage() {
       {s.error && <ErrorState error={s.error} />}
       <GoalCard g={goal.data} j={j} mode="customer" risk={risk} />
       {j ? <Disclosure title="Your typical month"><TypicalMonth j={j} mode="customer" /><p className="mt-2 text-[12px] text-ink-3">Typical = the middle value of your past months, so one unusual month doesn&apos;t skew it.</p></Disclosure>
-        : <Skeleton className="h-12 rounded-[22px]" />}
+        : <Skeleton className="h-12 rounded-2xl shadow-card" />}
     </div>
   );
 }

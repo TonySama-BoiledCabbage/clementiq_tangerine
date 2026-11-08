@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const badge = cva("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-semibold [&_svg]:size-3", {
   variants: {
     tone: {
-      orange: "bg-[#e5f0fd] text-tangerine",
+      orange: "bg-accent-tint text-tangerine",
       good: "bg-good-bg text-good",
       bad: "bg-bad-bg text-bad",
       warn: "bg-warn-bg text-warn",

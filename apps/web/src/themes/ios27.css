@@ -1,0 +1,70 @@
+/*
+ * Design: iOS 27 (the ui-redesign look before Fold). Grouped background, borderless rounded cards, SF type stack,
+ * one blue accent, Liquid Glass only on floating chrome. Values moved verbatim from the old globals.css.
+ * Must define every token in ../themes/contract.ts (themes.test.ts checks).
+ */
+:root[data-design="ios27"] {
+  /* surfaces */
+  --page: #f2f2f7;               /* systemGroupedBackground */
+  --surface: #ffffff;            /* cards */
+  --cream: #f2f2f7;              /* inset tiles inside cards */
+  --peach: #e9e9ee;              /* hover, selected rows */
+  --field: #eeeef0;              /* input / segmented-control fill */
+  --track: #e3e3e8;              /* slider and progress tracks */
+  --press: #e8e8ed;              /* :active row */
+  --hero-bg: linear-gradient(rgb(0 76 148) 45%, rgb(41 123 196) 100%);
+
+  /* text */
+  --ink: #1d1d1f;
+  --ink-2: #48484a;              /* 8.9:1 */
+  --ink-3: #6e6e73;              /* 5.0:1 on white, 4.6:1 on page */
+  --link: #0066cc;
+  --chevron: #c7c7cc;
+
+  /* lines */
+  --line: #e5e5ea;
+  --line-strong: #c6c6c8;
+  --grid: #e5e5ea;
+
+  /* action */
+  --tangerine: #0071e3;          /* accent (4.6:1 on white) */
+  --tangerine-bright: #0077ed;
+  --accent-tint: #e5f0fd;
+  --highlight: #fff1b8;          /* key figure marker */
+
+  /* status */
+  --good: #1f7d36;               /* 4.6:1 on --good-bg (was #248a3d, 3.9:1) */
+  --good-bg: #e7f6eb;
+  --bad: #d70015;
+  --bad-bg: #fdecee;
+  --warn: #b25000;
+  --warn-bg: #fff3e0;
+  --invest: #8944ab;
+
+  /* charts: income/baseline = blue, spending/scenario = orange, fixed = purple, balance = green */
+  --series-1: #e8590c;
+  --series-2: #8944ab;
+  --series-3: #248a3d;
+  --series-4: #0071e3;
+
+  /* shape: inset tiles 12–14, cards 22, sheets 28; buttons and chips are always capsules */
+  --r-tile: 12px;
+  --r-card: 22px;
+  --r-panel: 28px;
+
+  /* elevation: flat cards */
+  --elev-card: none;
+
+  /* type */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
+  --tracking-body: -0.01em;
+  --tracking-title: -0.02em;
+  --tracking-num: -0.03em;
+
+  /* Liquid Glass (opaque end of the slider, for readability) */
+  --glass-bg: rgb(255 255 255 / 0.78);
+  --glass-edge: rgb(255 255 255 / 0.7);
+  --glass-shadow: 0 10px 30px -8px rgb(0 0 0 / 0.18), 0 0 0 0.5px rgb(0 0 0 / 0.08);
+  --glass-blur: 24px;
+}

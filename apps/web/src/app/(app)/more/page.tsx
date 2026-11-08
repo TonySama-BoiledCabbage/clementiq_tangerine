@@ -9,10 +9,10 @@ import { NAV_ADMIN, moreFor } from "@/components/layout/nav";
 function Row({ href, label, icon: Icon }: { href: string; label: string; icon: React.ElementType }) {
   return (
     <li>
-      <Link href={href} className="flex min-h-11 items-center gap-3 px-4 py-2.5 active:bg-[#e8e8ed]">
+      <Link href={href} className="flex min-h-11 items-center gap-3 px-4 py-2.5 active:bg-press">
         <span className="grid size-7 place-items-center rounded-[7px] bg-tangerine text-white"><Icon className="size-4" aria-hidden /></span>
-        <span className="flex-1 text-[17px] tracking-[-0.02em] text-[#1d1d1f]">{label}</span>
-        <ChevronRight className="size-4 text-[#c7c7cc]" aria-hidden />
+        <span className="flex-1 text-[17px] tracking-[-0.02em] text-ink">{label}</span>
+        <ChevronRight className="size-4 text-chevron" aria-hidden />
       </Link>
     </li>
   );
@@ -21,8 +21,8 @@ function Row({ href, label, icon: Icon }: { href: string; label: string; icon: R
 function Group({ title, children }: { title?: string; children: React.ReactNode }) {
   return (
     <section className="space-y-1.5">
-      {title && <h2 className="px-4 text-[13px] font-normal uppercase tracking-[0] text-[#6e6e73]">{title}</h2>}
-      <ul className="divide-y-[0.5px] divide-line overflow-hidden rounded-[22px] bg-white">{children}</ul>
+      {title && <h2 className="px-4 text-[13px] font-normal uppercase tracking-[0] text-ink-3">{title}</h2>}
+      <ul className="divide-y-[0.5px] divide-line overflow-hidden rounded-2xl shadow-card bg-surface">{children}</ul>
     </section>
   );
 }
@@ -45,12 +45,12 @@ export default function MorePage() {
       <Group>
         <li>
           <button onClick={() => { logout(); router.push("/login"); }}
-            className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 px-4 py-2.5 text-[17px] tracking-[-0.02em] text-bad active:bg-[#e8e8ed]">
+            className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 px-4 py-2.5 text-[17px] tracking-[-0.02em] text-bad active:bg-press">
             <LogOut className="size-4" aria-hidden /> Sign out
           </button>
         </li>
       </Group>
-      <p className="px-4 text-[12px] leading-relaxed text-[#6e6e73]">Educational decision support, not financial advice. Every number is computed by Clement Core from the account&apos;s own data.</p>
+      <p className="px-4 text-[12px] leading-relaxed text-ink-3">Educational decision support, not financial advice. Every number is computed by Clement Core from the account&apos;s own data.</p>
     </div>
   );
 }

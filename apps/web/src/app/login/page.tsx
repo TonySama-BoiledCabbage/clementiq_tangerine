@@ -85,7 +85,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      <div className="hero-ocean hidden flex-col justify-between p-10 text-white lg:flex">
+      <div className="hero-bg hidden flex-col justify-between p-10 text-white lg:flex">
         <Logo light />
         <div>
           <h1 className="text-[56px] font-semibold leading-[1.07] tracking-[0.02em]">How long would<br />the money last?</h1>

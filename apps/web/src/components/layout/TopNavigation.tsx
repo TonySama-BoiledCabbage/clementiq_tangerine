@@ -21,7 +21,7 @@ export function TopNavigation() {
         <div className="ml-auto">
           <DropdownMenu>
             <DropdownMenuTrigger className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full pl-1 pr-1 text-ink hover:bg-black/5 sm:pr-3" aria-label="Account menu">
-              <span className="grid size-8 place-items-center rounded-full bg-[#e5f0fd] text-tangerine"><UserRound className="size-[18px]" /></span>
+              <span className="grid size-8 place-items-center rounded-full bg-accent-tint text-tangerine"><UserRound className="size-[18px]" /></span>
               <span className="hidden text-[15px] font-medium sm:inline">{who}</span>
             </DropdownMenuTrigger>
             <DropdownMenuContent>

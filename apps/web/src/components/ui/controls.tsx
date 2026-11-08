@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export function Slider({ className, ...props }: React.ComponentProps<typeof SliderPrimitive.Root>) {
   return (
     <SliderPrimitive.Root className={cn("relative flex w-full touch-none select-none items-center py-2", className)} {...props}>
-      <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-[#e3e3e8]">
+      <SliderPrimitive.Track className="relative h-1 w-full grow overflow-hidden rounded-full bg-track">
         <SliderPrimitive.Range className="absolute h-full brand-gradient" />
       </SliderPrimitive.Track>
       <SliderPrimitive.Thumb aria-label={props["aria-label"]}
@@ -31,7 +31,7 @@ export function Switch({ className, ...p }: React.ComponentProps<typeof SwitchPr
 export const Tabs = TabsPrimitive.Root;
 export const TabsContent = TabsPrimitive.Content;
 export function TabsList({ className, ...p }: React.ComponentProps<typeof TabsPrimitive.List>) {
-  return <TabsPrimitive.List className={cn("inline-flex flex-wrap items-center gap-0.5 rounded-[9px] bg-[#eeeef0] p-0.5", className)} {...p} />;
+  return <TabsPrimitive.List className={cn("inline-flex flex-wrap items-center gap-0.5 rounded-[9px] bg-field p-0.5", className)} {...p} />;
 }
 export function TabsTrigger({ className, ...p }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
   return <TabsPrimitive.Trigger className={cn("cursor-pointer rounded-[7px] px-3 py-1.5 text-[13px] font-medium text-ink transition data-[state=active]:bg-surface data-[state=active]:font-semibold data-[state=active]:shadow-[0_3px_8px_rgb(0_0_0/0.12),0_3px_1px_rgb(0_0_0/0.04)]", className)} {...p} />;
@@ -42,7 +42,7 @@ export const DropdownMenuTrigger = DM.Trigger;
 export function DropdownMenuContent({ className, ...p }: React.ComponentProps<typeof DM.Content>) {
   return (
     <DM.Portal>
-      <DM.Content sideOffset={8} align="end" className={cn("glass z-50 min-w-56 rounded-[14px] p-1.5 text-ink", className)} {...p} />
+      <DM.Content sideOffset={8} align="end" className={cn("glass z-50 min-w-56 rounded-xl p-1.5 text-ink", className)} {...p} />
     </DM.Portal>
   );
 }

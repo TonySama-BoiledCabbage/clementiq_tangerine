@@ -1,0 +1,83 @@
+/*
+ * Design: Fold — "Bauhaus poster on fog". Source: ./specs/fold.DESIGN.md (Fold's published style reference).
+ * Cool-tinted fog canvas, white cards lifted by NAVY-tinted shadows, midnight-navy ink and primary button,
+ * 12px cards / 24px panels / pill controls (the whole shape vocabulary), strictly flat (no gradients).
+ *
+ * Deliberate deviations from the spec (all because ClementIQ must stay readable for money decisions, WCAG AA 4.5:1):
+ *  - Smoke #979db5 (2.7:1 on white) and Electric Blue #459af8 (2.9:1) are NOT used for text. Captions use Dusk #676b89;
+ *    link text uses a deepened blue #1f64c8. Smoke only tints decorative things. Electric Blue is kept as
+ *    --electric for dots/indicators (not in the contract yet: nothing uses it).
+ *  - The 100px / -0.125em hero is not used on data screens (numbers must stay legible); big numbers use
+ *    64px / 700 / -0.04em, which is the spec's own heading-lg.
+ *  - GT Walsheim Pro / GT America are commercial: Inter is the stated substitute, listed second so a licensed
+ *    @font-face named "GT Walsheim Pro" is picked up automatically.
+ *  - The spec contradicts itself on the primary action colour (navy in Components, #459af8 in Agent Prompt Guide);
+ *    its Do/Don't says electric blue never fills a button, so the action fill is Midnight Navy.
+ *  - Status colours (good/bad/warn) are kept from ios27: Fold has none, and they carry meaning.
+ */
+:root[data-design="fold"] {
+  /* surfaces */
+  --page: #f0f1f5;               /* Fog White */
+  --surface: #ffffff;            /* Pure White */
+  --cream: #f0f1f5;              /* inset tiles inside cards */
+  --peach: #dddfe9;              /* Mist Gray: hover, selected rows */
+  --field: #e9ebf2;
+  --track: #dddfe9;
+  --press: #e4e6ee;
+  --hero-bg: #20294c;            /* flat Midnight Navy (no gradients) */
+
+  /* text */
+  --ink: #20294c;                /* Midnight Navy, 14.2:1 on white */
+  --ink-2: #4b5275;
+  --ink-3: #676b89;              /* Dusk: 5.2:1 on white, 4.6:1 on fog */
+  --link: #1f64c8;               /* deepened Electric Blue, 5.0:1 on fog */
+  --chevron: #788dba;            /* Hyacinth */
+
+  /* lines */
+  --line: #dddfe9;
+  --line-strong: #c7cbdb;        /* Silver Lining */
+  --grid: #dddfe9;
+
+  /* action: Midnight Navy fill, white label (14.2:1) */
+  --tangerine: #20294c;
+  --tangerine-bright: #2f3b69;
+  --accent-tint: #e4e7f2;
+  --highlight: #ffff00;          /* Voltage Yellow: key-figure marker, ink on it is 13.2:1 */
+
+  /* status: unchanged, they carry meaning */
+  --good: #1f7d36;               /* 4.6:1 on --good-bg (was #248a3d, 3.9:1) */
+  --good-bg: #e7f6eb;
+  --bad: #d70015;
+  --bad-bg: #fdecee;
+  --warn: #b25000;
+  --warn-bg: #fff3e0;
+  --invest: #8944ab;
+
+  /* charts: keep hue-distinct series, swap the blue for Cornflower Steel */
+  --series-1: #e8590c;
+  --series-2: #8944ab;
+  --series-3: #248a3d;
+  --series-4: #375390;
+  --electric: #459af8;
+
+  /* shape: cards 12, panels/nav 24, inset tiles 8 (spec radius-lg); pills stay rounded-full */
+  --r-tile: 8px;
+  --r-card: 12px;
+  --r-panel: 24px;
+
+  /* elevation: navy-tinted, never grey */
+  --elev-card: rgba(32, 41, 76, 0.12) 0px 9px 25px 0px;
+
+  /* type */
+  --font-sans: "GT Walsheim Pro", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "GT Walsheim Pro", "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --tracking-body: 0;
+  --tracking-title: -0.03em;
+  --tracking-num: -0.04em;
+
+  /* Nav pill / tab bar: opaque Fog, navy shadow, no blur (flat system) */
+  --glass-bg: #f0f1f5;
+  --glass-edge: rgba(255, 255, 255, 0.53);
+  --glass-shadow: rgba(32, 41, 76, 0.12) 0px 6px 16px 0px, rgba(32, 41, 76, 0.09) 0px 1px 5px 0px;
+  --glass-blur: 0px;
+}

@@ -33,15 +33,15 @@ export default function WhatIfPage() {
       </div>
       {s.error && <ErrorState error={s.error} />}
       <section aria-label="Scenarios" className="space-y-3">
-        {presets.data ? <ShockPicker presets={presets.data.presets} components={components} onPick={setPicked} mode="customer" allowNone /> : <Skeleton className="h-32 rounded-[22px]" />}
+        {presets.data ? <ShockPicker presets={presets.data.presets} components={components} onPick={setPicked} mode="customer" allowNone /> : <Skeleton className="h-32 rounded-2xl shadow-card" />}
         {presets.data && components && components.length > 0 && (
-          <details className="group rounded-[22px] bg-surface px-5">
+          <details className="group rounded-2xl shadow-card bg-surface px-5">
             <summary className="flex min-h-12 cursor-pointer list-none items-center gap-1 text-[15px] font-medium text-tangerine [&::-webkit-details-marker]:hidden">Change the details<ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden /></summary>
             <div className="pb-5"><ShockScenarioSelector components={components} onChange={setPicked} types={presets.data.types} presets={[]} onPreset={(p) => setPicked(p.components)} mode="judging" sValue={j?.S} /></div>
           </details>
         )}
       </section>
-      {!shock && <p className="rounded-[22px] bg-surface p-6 text-center text-[15px] text-ink-3">Choose a scenario above to see the result.</p>}
+      {!shock && <p className="rounded-2xl shadow-card bg-surface p-6 text-center text-[15px] text-ink-3">Choose a scenario above to see the result.</p>}
       {shock && (
         <Section title="How long your money would last">
           {sim.error ? <ErrorState error={sim.error} /> : !sim.data ? <Skeleton className="h-56" /> : <ResultView sim={sim.data} j={j} risk={risk} mode="customer" />}

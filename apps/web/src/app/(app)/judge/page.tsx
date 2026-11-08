@@ -76,7 +76,7 @@ export default function StressTestPage() {
       </section>
 
       {!accountId && (
-        <div className="rounded-[22px] bg-surface p-10 text-center">
+        <div className="rounded-2xl shadow-card bg-surface p-10 text-center">
           <p className="text-[17px] font-semibold">Choose a customer to begin</p>
           <p className="mt-1 text-[15px] text-ink-3">Type an <code>account_id</code> above and press Enter, open one from <Link href="/accounts" className="text-tangerine">Accounts</Link>, or use shuffle.</p>
         </div>
@@ -86,7 +86,7 @@ export default function StressTestPage() {
       {accountId && (
         <>
           {/* 1 · Summary strip: the six README inputs at a glance, today's runway, and any risk flags. */}
-          <section aria-label="Customer summary" className="rounded-[22px] bg-surface p-4 sm:p-5">
+          <section aria-label="Customer summary" className="rounded-2xl shadow-card bg-surface p-4 sm:p-5">
             {!j ? <Skeleton className="h-16" /> : (
               <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
                 <div>

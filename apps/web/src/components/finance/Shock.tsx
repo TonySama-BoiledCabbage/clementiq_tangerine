@@ -57,7 +57,7 @@ export function ShockScenarioSelector({ components, onChange, types, presets, on
         </div>
       </div>}
       {components.map((c, i) => (
-        <div key={i} className="rounded-[14px] bg-cream p-3">
+        <div key={i} className="rounded-xl bg-cream p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
             <select value={c.type} aria-label="Shock type" onChange={(e) => upd(i, { ...SHOCK_DEFAULTS[e.target.value as ShockType], type: e.target.value as ShockType } as ShockComponent)}
               className="h-9 rounded-[10px] border-0 bg-surface px-2.5 text-[13px] font-semibold">
@@ -106,7 +106,7 @@ export function ShockScenarioSelector({ components, onChange, types, presets, on
         </div>
       ))}
       {components.length < 12 && (
-        <button onClick={() => onChange([...components, SHOCK_DEFAULTS.bill_inflation])} className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-[14px] bg-peach text-[15px] font-medium text-tangerine hover:brightness-95">
+        <button onClick={() => onChange([...components, SHOCK_DEFAULTS.bill_inflation])} className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-peach text-[15px] font-medium text-tangerine hover:brightness-95">
           <Plus className="size-4" /> Combine another shock
         </button>
       )}
@@ -124,8 +124,8 @@ export function FinancialImpactSummary({ sim }: { sim: SimResult }) {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-[14px] bg-cream p-3 text-center"><p className="text-xs font-semibold text-ink-2">Baseline</p><FinancialRunwayGauge runway={sim.baseline.runway} size={170} /></div>
-        <div className="rounded-[14px] bg-[#e5f0fd] p-3 text-center"><p className="text-xs font-semibold text-tangerine">With shock</p><FinancialRunwayGauge runway={sim.scenario.runway} size={170} /></div>
+        <div className="rounded-xl bg-cream p-3 text-center"><p className="text-xs font-semibold text-ink-2">Baseline</p><FinancialRunwayGauge runway={sim.baseline.runway} size={170} /></div>
+        <div className="rounded-xl bg-accent-tint p-3 text-center"><p className="text-xs font-semibold text-tangerine">With shock</p><FinancialRunwayGauge runway={sim.scenario.runway} size={170} /></div>
       </div>
       {sim.verdict && (
         <div className={cn("rounded-2xl p-3 text-sm font-semibold", sim.verdict.survives ? "bg-good-bg text-good" : "bg-bad-bg text-bad")}>

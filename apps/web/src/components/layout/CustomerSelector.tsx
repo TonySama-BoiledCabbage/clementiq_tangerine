@@ -46,7 +46,7 @@ export function CustomerSelector({ compact = false, autoFocus = false }: { compa
   };
 
   if (role === "customer") {
-    return <div className="flex items-center gap-2 rounded-[12px] bg-[#eeeef0] px-3 py-2 text-[15px]"><Lock className="size-4 text-ink-3" /> Account <b>{accountId}</b></div>;
+    return <div className="flex items-center gap-2 rounded-md bg-field px-3 py-2 text-[15px]"><Lock className="size-4 text-ink-3" /> Account <b>{accountId}</b></div>;
   }
 
   return (
@@ -56,9 +56,9 @@ export function CustomerSelector({ compact = false, autoFocus = false }: { compa
         <input value={q} onChange={(e) => { setQ(e.target.value.replace(/\D/g, "").slice(0, 8)); setOpen(true); }} onFocus={() => { if (!autoFocus) setOpen(true); }} onClick={() => setOpen(true)}
           inputMode="numeric" aria-label="Enter account_id" autoFocus={autoFocus}
           placeholder={accountId ? `Account ${accountId} — type another account_id` : "Enter any account_id (e.g. 20111)"}
-          className="h-11 w-full rounded-[12px] border-0 bg-[#eeeef0] pl-9 pr-4 text-[15px] focus:outline-none focus:ring-2 focus:ring-tangerine/40" />
+          className="h-11 w-full rounded-md border-0 bg-field pl-9 pr-4 text-[15px] focus:outline-none focus:ring-2 focus:ring-tangerine/40" />
         {open && (
-          <ul className="glass absolute z-30 mt-1.5 w-full overflow-hidden rounded-[14px]" role="listbox">
+          <ul className="glass absolute z-30 mt-1.5 w-full overflow-hidden rounded-xl" role="listbox">
             {list.isLoading && <li className="p-3 text-xs text-ink-2">Searching…</li>}
             {list.data?.items.map((a) => (
               <li key={a.account_id}>

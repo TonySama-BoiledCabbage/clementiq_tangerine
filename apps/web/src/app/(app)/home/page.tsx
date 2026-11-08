@@ -30,10 +30,10 @@ export default function HomePage() {
       </div>
       {s.error && <ErrorState error={s.error} />}
       {obl.data ? <NowCard o={obl.data} j={j} risk={risk} mode="customer" compact />
-        : obl.error ? <ErrorState error={obl.error} /> : <Skeleton className="h-40 rounded-[22px]" />}
+        : obl.error ? <ErrorState error={obl.error} /> : <Skeleton className="h-40 rounded-2xl shadow-card" />}
       <GoalCard g={goal.data} j={j} mode="customer" risk={risk} summary />
       {fragile && (
-        <Link href="/what-if?scenario=ei55_6m" className="flex items-center gap-4 rounded-[22px] bg-surface p-5 active:bg-[#e8e8ed]">
+        <Link href="/what-if?scenario=ei55_6m" className="flex items-center gap-4 rounded-2xl shadow-card bg-surface p-5 active:bg-press">
           <span className="grid size-10 shrink-0 place-items-center rounded-full bg-warn-bg text-warn"><ShieldAlert className="size-5" aria-hidden /></span>
           <span className="flex-1 text-[15px] leading-relaxed">
             <b className="block">If you lost your job, your savings would last about {ei!.toFixed(ei! < 1 ? 1 : 0)} month{ei! >= 1.5 ? "s" : ""}.</b>

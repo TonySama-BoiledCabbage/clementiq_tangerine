@@ -1,60 +1,28 @@
 @import "tailwindcss";
+/* Designs: one file each, same token contract (src/themes/contract.ts). Active one = <html data-design="…">. */
+@import "../themes/ios27.css";
+@import "../themes/fold.css";
 
 /* `dark:` utilities only apply when data-theme="dark" is set explicitly (the demo build is light-only). */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /*
- * ClementIQ — iOS 27-style system (ui-redesign branch).
- * Grouped background, borderless rounded cards, SF type stack, one accent (blue) for actions,
- * Liquid Glass only on floating chrome (top bar, tab bar) and kept on the opaque side for legibility.
- * Token NAMES are kept from the original theme so every existing page restyles with it:
- *   --tangerine = accent, --peach = fill (hover / selected / tracks), --cream = inset tile fill.
- * Colour carries STATUS only (good / warn / bad) and is always paired with an icon or words.
+ * This file is design-agnostic: it maps the active design's tokens onto Tailwind utilities and holds shared
+ * structure. Never put a colour, radius, shadow or font literal here — add/alter it in src/themes/<id>.css.
+ * Token NAMES come from the original theme: --tangerine = the action colour, --peach = fill (hover / selected),
+ * --cream = inset tile fill. Colour carries STATUS only (good / warn / bad) and is always paired with an icon or words.
  */
-:root {
-  --tangerine: #0071e3;          /* accent (4.6:1 on white) */
-  --tangerine-bright: #0077ed;
-  --link: #0066cc;
-  --peach: #e9e9ee;              /* fill: hover, selected rows, slider tracks */
-  --cream: #f2f2f7;              /* inset tiles inside cards */
-  --surface: #ffffff;            /* cards (secondarySystemGroupedBackground) */
-  --page: #f2f2f7;               /* systemGroupedBackground */
-  --ink: #1d1d1f;                /* label */
-  --ink-2: #48484a;              /* secondary label (8.9:1) */
-  --ink-3: #6e6e73;              /* tertiary label / captions (5.0:1 on white, 4.6:1 on page) */
-  --line: #e5e5ea;               /* row separators */
-  --line-strong: #c6c6c8;        /* opaque separator */
-  --highlight: #fff1b8;          /* key figure marker */
-
-  /* status (accessible iOS system colours for text on light backgrounds) */
-  --good: #248a3d;
-  --good-bg: #e7f6eb;
-  --bad: #d70015;
-  --bad-bg: #fdecee;
-  --warn: #b25000;
-  --warn-bg: #fff3e0;
-  --invest: #8944ab;
-
-  /* chart series: income/baseline = blue, spending/scenario = orange, fixed = purple, balance = green */
-  --series-1: #e8590c;
-  --series-2: #8944ab;
-  --series-3: #248a3d;
-  --series-4: #0071e3;
-  --grid: #e5e5ea;
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.04);
-
-  /* Liquid Glass (opaque end of the iOS 27 slider, for readability) */
-  --glass-bg: rgb(255 255 255 / 0.78);
-  --glass-edge: rgb(255 255 255 / 0.7);
-  --glass-shadow: 0 10px 30px -8px rgb(0 0 0 / 0.18), 0 0 0 0.5px rgb(0 0 0 / 0.08);
-}
-
 @theme inline {
   --color-tangerine: var(--tangerine);
   --color-tangerine-bright: var(--tangerine-bright);
+  --color-accent-tint: var(--accent-tint);
   --color-link: var(--link);
   --color-peach: var(--peach);
   --color-cream: var(--cream);
+  --color-field: var(--field);
+  --color-track: var(--track);
+  --color-press: var(--press);
+  --color-chevron: var(--chevron);
   --color-surface: var(--surface);
   --color-page: var(--page);
   --color-ink: var(--ink);
@@ -70,42 +38,40 @@
   --color-warn: var(--warn);
   --color-warn-bg: var(--warn-bg);
   --color-invest: var(--invest);
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", system-ui, sans-serif;
-  --shadow-card: var(--shadow);
-  /* iOS radii: inset tiles 12–14, cards 22, sheets 28; buttons/chips are capsules (rounded-full). */
+  --shadow-card: var(--elev-card);
+  /* Shape: rounded-md/lg/xl = inset tile, rounded-2xl = card, rounded-3xl = panel/sheet; rounded-full = capsule. */
   --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 14px;
-  --radius-xl: 14px;
-  --radius-2xl: 22px;
-  --radius-3xl: 28px;
+  --radius-md: var(--r-tile);
+  --radius-lg: var(--r-tile);
+  --radius-xl: var(--r-tile);
+  --radius-2xl: var(--r-card);
+  --radius-3xl: var(--r-panel);
 }
 
 html, body { background: var(--page); color: var(--ink); }
-body { font-family: var(--font-sans); font-size: 15px; letter-spacing: -0.01em; -webkit-font-smoothing: antialiased; }
+body { font-family: var(--font-sans); font-size: 15px; letter-spacing: var(--tracking-body); -webkit-font-smoothing: antialiased; }
 h1, h2, h3, .font-display { font-family: var(--font-display); }
 .tabular { font-variant-numeric: tabular-nums; }
 /* Large numeric readout (the one number on a screen that must be read from across the room). */
-.display-num { font-family: var(--font-display); font-size: 64px; line-height: 1.05; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-/* iOS large title. */
-.large-title { font-family: var(--font-display); font-size: 34px; line-height: 1.2; font-weight: 700; letter-spacing: -0.02em; }
+.display-num { font-family: var(--font-display); font-size: 64px; line-height: 1.05; font-weight: 700; letter-spacing: var(--tracking-num); font-variant-numeric: tabular-nums; }
+/* Large page title. */
+.large-title { font-family: var(--font-display); font-size: 34px; line-height: 1.2; font-weight: 700; letter-spacing: var(--tracking-title); }
 /* Key figure marker in customer-facing copy. */
 .marker { background: var(--highlight); padding: 0 3px; border-radius: 4px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-/* Liquid Glass material for floating chrome only. */
+/* Floating chrome material (top bar, tab bar). Each design decides blur, edge and shadow. */
 .glass {
   background: var(--glass-bg);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
   box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-edge);
 }
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .glass { background: rgb(255 255 255 / 0.96); } }
-@media (prefers-reduced-transparency: reduce) { .glass { background: #ffffff; -webkit-backdrop-filter: none; backdrop-filter: none; } }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .glass { background: var(--surface); } }
+@media (prefers-reduced-transparency: reduce) { .glass { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 /* Legacy class names: solid accent fill (slider range, progress) / flat inset panel. */
 .brand-gradient { background: var(--tangerine); color: #ffffff; }
 .peach-gradient { background: var(--cream); }
-/* Login hero wash (Apple product-hero blue). */
-.hero-ocean { background: linear-gradient(rgb(0 76 148) 45%, rgb(41 123 196) 100%); }
-:focus-visible { outline: 3px solid rgb(0 113 227 / 0.5); outline-offset: 2px; }
+/* Login hero background (a design may make it a gradient or a flat colour). */
+.hero-bg { background: var(--hero-bg); }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--tangerine) 50%, transparent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 .recharts-tooltip-wrapper { outline: none; }

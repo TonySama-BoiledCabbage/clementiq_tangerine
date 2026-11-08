@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
+import { DEFAULT_DESIGN, designBootScript } from "@/themes";
 
 export const metadata: Metadata = {
   title: "ClementIQ — Financial Resilience Engine",
@@ -15,6 +16,8 @@ export const viewport: Viewport = { themeColor: "#ffffff", width: "device-width"
 
 // Demo build is light-only: clear any saved dark choice from the original theme.
 const themeScript = `try{localStorage.removeItem("clementiq-theme")}catch(e){}`;
+// Visual design (src/themes): sets <html data-design> before first paint from ?design= / localStorage / default.
+const designScript = designBootScript();
 
 /**
  * Guard for DOM edits made outside React (browser translate, Immersive Translate and similar extensions
@@ -28,12 +31,13 @@ var ib=Node.prototype.insertBefore;Node.prototype.insertBefore=function(n,r){if(
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-CA" translate="no" className="notranslate" suppressHydrationWarning>
+    <html lang="en-CA" translate="no" className="notranslate" data-design={DEFAULT_DESIGN} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
         <script dangerouslySetInnerHTML={{ __html: domGuardScript }} />
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: designScript }} />
       </head>
       <body><Providers>{children}</Providers></body>
     </html>

@@ -139,7 +139,7 @@ export function Section({ n, title, desc, right, children, className }: { n?: nu
 }
 export function Disclosure({ title, children, defaultOpen = false, badge }: { title: string; children: React.ReactNode; defaultOpen?: boolean; badge?: React.ReactNode }) {
   return (
-    <details className="group rounded-[22px] bg-surface" open={defaultOpen}>
+    <details className="group rounded-2xl shadow-card bg-surface" open={defaultOpen}>
       <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 px-5 text-[15px] font-semibold [&::-webkit-details-marker]:hidden">
         <span className="flex items-center gap-2"><span>{title}</span>{badge}</span><ChevronDown className="size-4 text-ink-3 transition-transform group-open:rotate-180" aria-hidden />
       </summary>
@@ -149,7 +149,7 @@ export function Disclosure({ title, children, defaultOpen = false, badge }: { ti
 }
 export function Note({ tone, children }: { tone: Tone; children: React.ReactNode }) {
   const Icon = TONE_ICON[tone];
-  return <p role="note" className={cn("flex gap-2 rounded-[14px] p-3 text-[13px] leading-relaxed", TONE_BOX[tone])}><Icon className="mt-0.5 size-4 shrink-0" aria-hidden /><span>{children}</span></p>;
+  return <p role="note" className={cn("flex gap-2 rounded-xl p-3 text-[13px] leading-relaxed", TONE_BOX[tone])}><Icon className="mt-0.5 size-4 shrink-0" aria-hidden /><span>{children}</span></p>;
 }
 export function Row({ label, value, strong }: { label: React.ReactNode; value: React.ReactNode; strong?: boolean }) {
   return (
@@ -165,7 +165,7 @@ export function ShockPicker({ presets, components, onPick, mode, allowNone }: { 
   const featured = FEATURED.map((id) => presets.find((p) => p.id === id)).filter((p): p is Preset => !!p);
   return (
     <div role="group" aria-label={mode === "customer" ? "What-if scenarios" : "Twist cards"}
-      className={cn("grid gap-1 rounded-[14px] bg-[#eeeef0] p-1", mode === "customer" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2 lg:grid-cols-4")}>
+      className={cn("grid gap-1 rounded-xl bg-field p-1", mode === "customer" ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2 lg:grid-cols-4")}>
       {featured.map((p) => {
         const on = presetMatches(p, components);
         return (
@@ -214,9 +214,9 @@ export function NowCard({ o, j, risk, mode, compact = false, bare = false }: { o
   );
   const body = (
       <div className="space-y-3">
-        <p className={cn("flex gap-2.5 rounded-[14px] p-3.5 text-[15px] leading-relaxed", TONE_BOX[tone])}><Icon key={`i-${tone}`} className="mt-0.5 size-5 shrink-0" aria-hidden /><span key={`h-${o.status}`} className="text-ink">{headline}</span></p>
+        <p className={cn("flex gap-2.5 rounded-xl p-3.5 text-[15px] leading-relaxed", TONE_BOX[tone])}><Icon key={`i-${tone}`} className="mt-0.5 size-5 shrink-0" aria-hidden /><span key={`h-${o.status}`} className="text-ink">{headline}</span></p>
         {risk.loanBehind && (
-          <p className="flex gap-2.5 rounded-[14px] bg-bad-bg p-3.5 text-[15px] leading-relaxed text-ink"><Phone className="mt-0.5 size-5 shrink-0 text-bad" aria-hidden />
+          <p className="flex gap-2.5 rounded-xl bg-bad-bg p-3.5 text-[15px] leading-relaxed text-ink"><Phone className="mt-0.5 size-5 shrink-0 text-bad" aria-hidden />
             {mode === "customer" ? <span><b>Your loan is behind on payments.</b> Calling your lender now, before the next payment, gives you the most options.</span> : <span><b>Loan status D</b> — running, client in arrears ({money(o.loan?.monthly_payment)}/mo).</span>}</p>
         )}
         {risk.pastDefault && <Note tone="warn">{mode === "customer" ? "A previous loan on this account was not fully repaid." : "Loan status B — finished, not repaid (past default)."}</Note>}
@@ -247,7 +247,7 @@ export function GoalCard({ g, j, mode, n, risk, summary = false }: { g?: GoalPla
         const bar = (
           <div>
             <div className="mb-1.5 flex justify-between text-[13px] text-ink-3"><span>{money(g.current_buffer)} saved</span><span>Goal {money(g.target)}</span></div>
-            <div className="relative h-2 w-full rounded-full bg-[#e3e3e8]" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Safety net progress">
+            <div className="relative h-2 w-full rounded-full bg-track" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Safety net progress">
               <div className="h-full rounded-full bg-tangerine" style={{ width: `${pct}%` }} />
               <span aria-hidden className="absolute top-1/2 h-3.5 w-0.5 -translate-y-1/2 rounded bg-ink-3" style={{ left: `${Math.min((j.S / g.target) * 100, 100)}%` }} />
             </div>
@@ -272,16 +272,16 @@ export function GoalCard({ g, j, mode, n, risk, summary = false }: { g?: GoalPla
             ) : (
               <ol className="space-y-2.5">
                 {stabilise && (
-                  <li className="rounded-[14px] bg-bad-bg p-3"><span className="block text-[12px] font-semibold uppercase tracking-[0.02em] text-bad">First</span>
+                  <li className="rounded-xl bg-bad-bg p-3"><span className="block text-[12px] font-semibold uppercase tracking-[0.02em] text-bad">First</span>
                     {mode === "customer" ? "Get this month's payments and your loan back on track (see “Right now”). Start saving once that's done — even a small amount." : "Arrears / payments above balance: stabilise first; savings plan starts after."}</li>
                 )}
                 {first > 0 && (
-                  <li className="rounded-[14px] bg-cream p-3"><span className="block text-[12px] font-semibold uppercase tracking-[0.02em] text-ink-3">{stabilise ? "Then" : "Step 1"}</span>
+                  <li className="rounded-xl bg-cream p-3"><span className="block text-[12px] font-semibold uppercase tracking-[0.02em] text-ink-3">{stabilise ? "Then" : "Step 1"}</span>
                     {mode === "customer"
                       ? <>Set up a <b>Goal</b> in your Tangerine Savings Account with an <b>Automatic Savings Program</b> of <span className="marker font-semibold">{money(c)} a month</span> on payday. You&apos;d reach one month of spending ({money(j.S)}) in about <b>{firstMonths != null ? duration(firstMonths) : "—"}</b>.</>
                       : <>Goal + ASP of <span className="marker font-semibold">{money(c)}/mo</span> (50% of surplus) → 1 month of S ({money(j.S)}) in ~<b>{firstMonths != null ? duration(firstMonths) : "—"}</b>.</>}</li>
                 )}
-                <li className="rounded-[14px] bg-cream p-3"><span className="block text-[12px] font-semibold uppercase tracking-[0.02em] text-ink-3">Later</span>
+                <li className="rounded-xl bg-cream p-3"><span className="block text-[12px] font-semibold uppercase tracking-[0.02em] text-ink-3">Later</span>
                   Keep going to three months ({money(g.target)}) — about <b>{g.months_to_goal != null ? duration(g.months_to_goal) : "—"}</b> at this pace{(g.months_to_goal ?? 0) > 24 ? "; raising the amount when income allows shortens it a lot" : ""}.</li>
               </ol>
             )}
@@ -358,7 +358,7 @@ export function BackupView({ b, risk, mode }: { b: BackupPlan; risk: Risk; mode:
         : <p>Income would still cover spending.</p>}
       <ol className="space-y-2">
         {backupSteps(b, risk, mode).map((a, i) => (
-          <li key={a} className="flex gap-3 rounded-[14px] bg-cream p-3"><span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full bg-ink text-[12px] font-semibold text-white">{i + 1}</span><span>{a}</span></li>
+          <li key={a} className="flex gap-3 rounded-xl bg-cream p-3"><span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full bg-ink text-[12px] font-semibold text-white">{i + 1}</span><span>{a}</span></li>
         ))}
       </ol>
       {b.best_tier && b.runway_improvement_months > 0 && b.best_tier.discretionary_cut_pct <= MAX_REALISTIC_CUT && (
