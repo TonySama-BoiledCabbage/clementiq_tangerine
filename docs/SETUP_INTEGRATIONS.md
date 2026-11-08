@@ -10,7 +10,7 @@ Commands are written for Windows PowerShell; the macOS/Linux equivalents are in 
 
 1. Get the code:
    ```powershell
-   git clone -b branch2-eman https://github.com/emanbutt8991-dotcom/clementiq_tangerine.git
+   git clone -b branch_eman_v2 https://github.com/emanbutt8991-dotcom/clementiq_tangerine.git
    cd clementiq_tangerine
    ```
 2. Install the backend:
@@ -163,7 +163,7 @@ Commands are written for Windows PowerShell; the macOS/Linux equivalents are in 
 4. SSH in (`ssh root@SERVER_IP`) and run:
    ```bash
    curl -fsSL https://get.docker.com | sh
-   git clone -b branch2-eman https://github.com/emanbutt8991-dotcom/clementiq_tangerine.git
+   git clone -b branch_eman_v2 https://github.com/emanbutt8991-dotcom/clementiq_tangerine.git
    cd clementiq_tangerine
    cp .env.example .env && nano .env
    ```
