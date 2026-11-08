@@ -8,7 +8,9 @@ import type { Preset, ShockComponent } from "@clementiq/shared-types";
 import { ShockRequestSchema } from "@clementiq/shared-types";
 import { api } from "@/lib/api";
 import { money } from "@/lib/format";
-import { useAccount, usePresets, useSimulation, useSummary } from "@/lib/hooks";
+import { useSession } from "@/lib/store";
+import { DEFAULT_SHOCK } from "@/lib/analysis";
+import { useAccount, usePresets, useSimulation, useSummary, useScenarioDraft } from "@/lib/hooks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,17 +35,22 @@ export default function SimulatorPage() {
   const presets = usePresets();
   const summary = useSummary(accountId);
   const qc = useQueryClient();
-  const [components, setComponents] = useState<ShockComponent[]>([{ type: "job_loss", income_replacement_pct: 55, duration_months: 6 }]);
-  const [mode, setMode] = useState<"judging" | "extended">("judging");
-  const [cut, setCut] = useState(0);
-  const [horizon, setHorizon] = useState(24);
+  const { draft, update } = useScenarioDraft(accountId, DEFAULT_SHOCK);
+  const components = draft.components ?? DEFAULT_SHOCK;
+  const mode = draft.mode;
+  const cut = draft.discretionary_cut_pct;
+  const horizon = draft.horizon_months;
+  const setComponents = (components: ShockComponent[]) => update({ components });
+  const setMode = (mode: "judging" | "extended") => update({ mode });
+  const setCut = (discretionary_cut_pct: number) => update({ discretionary_cut_pct });
+  const setHorizon = (horizon_months: number) => update({ horizon_months });
   const [name, setName] = useState("");
 
   useEffect(() => {
     const pid = params.get("preset");
     const p = presets.data?.presets.find((x) => x.id === pid);
-    if (p) { setComponents(p.components); setMode(p.judging ? "judging" : "extended"); }
-  }, [params, presets.data]);
+    if (p && accountId) useSession.getState().setScenario(accountId, { components: p.components, mode: p.judging ? "judging" : "extended" });
+  }, [params, presets.data, accountId]);
 
   const req = useMemo(() => ({ account_id: accountId ?? 0, components, mode, horizon_months: horizon, discretionary_cut_pct: mode === "extended" ? cut : 0 }), [accountId, components, mode, horizon, cut]);
   const valid = ShockRequestSchema.safeParse(req).success && accountId != null;
@@ -56,7 +63,7 @@ export default function SimulatorPage() {
     onSuccess: () => { setName(""); qc.invalidateQueries({ queryKey: ["scenarios"] }); },
   });
 
-  const applyPreset = (p: Preset) => { setComponents(p.components); setMode(p.judging ? "judging" : "extended"); };
+  const applyPreset = (p: Preset) => { update({ components: p.components, mode: p.judging ? "judging" : "extended" }); };
 
   return (
     <div className="space-y-6">
@@ -100,7 +107,7 @@ export default function SimulatorPage() {
                 {save.isError && <p className="text-xs text-bad">{(save.error as Error).message}</p>}
                 <ul className="divide-y divide-line">{saved.data?.items.map((s) => (
                   <li key={s.id} className="flex items-center justify-between py-2 text-xs">
-                    <button className="cursor-pointer text-left font-semibold hover:text-tangerine" onClick={() => { setComponents(s.spec.components); setMode(s.spec.mode); }}>{s.name}</button>
+                    <button className="cursor-pointer text-left font-semibold hover:text-tangerine" onClick={() => { update({ ...s.spec }); }}>{s.name}</button>
                     <span className="flex items-center gap-2"><span className="text-ink-2">runway {s.runway}</span>
                       <button aria-label={`Delete ${s.name}`} className="cursor-pointer text-ink-3 hover:text-bad" onClick={async () => { await api(`/shocks/scenarios/${s.id}`, { method: "DELETE" }); qc.invalidateQueries({ queryKey: ["scenarios"] }); }}>✕</button></span>
                   </li>
@@ -135,7 +142,7 @@ export default function SimulatorPage() {
                     <CardContent className="space-y-1.5 text-xs text-ink-2">
                       {sim.data.assumptions.map((a) => <p key={a}>• {a}</p>)}
                       {sim.data.warnings.map((w) => <p key={w} className="text-warn">⚠ {w}</p>)}
-                      <p className="pt-2"><Link href={`/recovery?tab=backup`} className="font-semibold text-tangerine">Build a Backup Plan for this shock →</Link></p>
+                      <p className="pt-2"><Link href={`/recovery?tab=backup&account=${accountId}`} className="font-semibold text-tangerine">Build a Backup Plan for this shock →</Link></p>
                     </CardContent>
                   </Card>
                   <AIInsightCard endpoint="/ai/explain-scenario" body={{ request: debounced }} kind="scenario" key={sim.data.input_hash} />

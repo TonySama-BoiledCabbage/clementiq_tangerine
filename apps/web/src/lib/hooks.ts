@@ -1,9 +1,10 @@
 "use client";
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Alert, Indicator, NewsEvent, Preset, Resilience, SimResult, SourceStatus, Summary } from "@clementiq/shared-types";
 import { api } from "./api";
+import { scenarioDraft, goalDraft } from "./analysis";
 import { useSession } from "./store";
 
 export function useAccount(): number | null {
@@ -20,7 +21,7 @@ export function useAccount(): number | null {
     }
     if (fromUrl && /^\d+$/.test(fromUrl) && Number(fromUrl) !== accountId) setAccount(Number(fromUrl));
   }, [fromUrl, accountId, setAccount, role, bound]);
-  return role === "customer" ? bound : accountId;
+  return role === "customer" ? bound : fromUrl && /^\d+$/.test(fromUrl) && Number(fromUrl) > 0 ? Number(fromUrl) : accountId;
 }
 
 export function useSummary(accountId: number | null) {
@@ -46,7 +47,7 @@ export function useSimulation(req: unknown, enabled: boolean) {
   return useQuery({
     queryKey: ["simulate", req],
     queryFn: () => api<SimResult>("/shocks/simulate", { method: "POST", json: req }),
-    enabled, placeholderData: keepPreviousData, staleTime: 60_000,
+    enabled, staleTime: 60_000,
   });
 }
 
@@ -117,6 +118,7 @@ export function useRefreshWorld() {
 
 export interface SettingsResponse {
   preferences: {
+    privacy: { personalized_ai: boolean };
     alerts: { enabled: boolean; categories: Record<string, boolean>; min_severity: "low" | "medium" | "high"; relevance_threshold: number;
               runway_threshold_months: number; max_per_day: number; quiet_hours: { enabled: boolean; start: string; end: string; timezone: string } };
     channels: { in_app: boolean; email: { opt_in: boolean; address: string | null }; browser_push: { opt_in: boolean } };
@@ -146,4 +148,18 @@ export function useAIStatus() {
 export function usePrefersReducedMotion(): boolean {
   if (typeof window === "undefined") return false;
   return window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+}
+
+/** UI drafts only; API results stay in Query. Drafts are scoped to the selected account. */
+export function useScenarioDraft(accountId: number | null, initial: import("@clementiq/shared-types").ShockComponent[] | null) {
+  const stored = useSession((s) => s.scenario);
+  const update = useSession((s) => s.setScenario);
+  const draft = stored?.account_id === accountId ? stored : scenarioDraft(accountId ?? 0, initial);
+  return { draft, update: (patch: Partial<typeof draft>) => { if (accountId) update(accountId, { ...draft, ...patch }); } };
+}
+export function useGoalDraft(accountId: number | null) {
+  const stored = useSession((s) => s.goalSettings);
+  const update = useSession((s) => s.setGoalSettings);
+  const draft = stored?.account_id === accountId ? stored : goalDraft(accountId ?? 0);
+  return { draft, update: (patch: Partial<typeof draft>) => { if (accountId) update(accountId, { ...draft, ...patch }); } };
 }

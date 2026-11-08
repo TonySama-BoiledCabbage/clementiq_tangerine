@@ -1,7 +1,10 @@
 "use client";
 import { Suspense, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useSession } from "@/lib/store";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { ErrorState } from "@/components/ui/misc";
+import { useSession, type Role } from "@/lib/store";
 import { Skeleton } from "@/components/ui/misc";
 import { AppSidebar } from "./AppSidebar";
 import { MobileTabBar } from "./MobileTabBar";
@@ -9,6 +12,8 @@ import { TopNavigation } from "./TopNavigation";
 
 /** Authenticated application frame: header, left nav, main content (the AI side panel is not shown in the redesign). */
 export function AppShell({ children }: { children: React.ReactNode }) {
+  const role = useSession((s) => s.role);
+  const sub = useSession((s) => s.sub);
   const token = useSession((s) => s.token);
   const expiresAt = useSession((s) => s.expiresAt);
   const logout = useSession((s) => s.logout);
@@ -28,7 +33,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (!token) router.replace(`/login?next=${encodeURIComponent(path)}`);
   }, [hydrated, token, expiresAt, logout, router, path]);
 
-  if (!hydrated || !token) {
+  const verifyIdentity = useSession((s) => s.verifyIdentity);
+  const identity = useQuery({ queryKey: ["identity"], queryFn: () => api<{ role: Role; sub: string; account_id: number | null }>("/auth/me"), enabled: hydrated && !!token, staleTime: Infinity });
+  useEffect(() => { if (identity.data) verifyIdentity(identity.data); }, [identity.data, verifyIdentity]);
+  if (identity.error) return <div className="p-6"><ErrorState error={identity.error} retry={identity.refetch} /></div>;
+  if (!hydrated || !token || !identity.data || role !== identity.data.role || sub !== identity.data.sub) {
     return <div className="p-8"><Skeleton className="h-16 w-full" /><div className="mt-6 grid gap-4 md:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-28" />)}</div></div>;
   }
 

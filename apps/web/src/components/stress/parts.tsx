@@ -3,6 +3,9 @@
  * Shared building blocks for the account workbench (analysts, judges) and the customer pages.
  * One set of rules for risk, tone and wording, so every screen agrees on what "at risk" means.
  */
+import { ReadAloud } from "@/components/ui/reading";
+import { useGoalDraft } from "@/lib/hooks";
+import { DEFAULT_SHOCK, goalRequest, type ScenarioDraft } from "@/lib/analysis";
 import { useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -43,7 +46,7 @@ export const LABELS: Record<Mode, Record<string, { title: string; sub: string }>
     mortgage_renewal: { title: "My mortgage renews", sub: "Payment goes up about 6%" },
   },
 };
-export const ANALYST_DEFAULT: ShockComponent[] = [{ type: "job_loss", income_replacement_pct: 55, duration_months: 6 }];
+export const ANALYST_DEFAULT = DEFAULT_SHOCK;
 /** A cut bigger than this is not a plan anyone can follow; we say so instead of printing it. */
 export const MAX_REALISTIC_CUT = 60;
 export const presetMatches = (p: Preset, c: ShockComponent[] | null) => !!c && JSON.stringify(p.components) === JSON.stringify(c);
@@ -62,16 +65,17 @@ export const bigRunway = (r: Runway) => (r.no_shortfall ? "120+" : r.display);
 export const runwayCaption = (r: Runway) => (r.no_shortfall ? "no monthly shortfall" : r.status === "depleted" ? "savings already used up" : "months of runway");
 
 // ── Risk (same rules as GET /api/insights/needs-attention) ───────────────────────────────────────────
-export interface Risk { thinBuffer: boolean; loanBehind: boolean; pastDefault: boolean; shortThisMonth: boolean }
+export interface Risk { unknown: boolean; thinBuffer: boolean; loanBehind: boolean; pastDefault: boolean; shortThisMonth: boolean }
 export function riskOf(j: Judging | undefined, o: Obligations | undefined): Risk {
   return {
+    unknown: !j || !o || o.status === "unknown",
     thinBuffer: !!j && j.S > 0 && j.B < j.S,
     loanBehind: !!o?.loan?.behind,
     pastDefault: o?.loan?.status === "B",
     shortThisMonth: o?.status === "short",
   };
 }
-export const anyRisk = (r: Risk) => r.thinBuffer || r.loanBehind || r.shortThisMonth;
+export const anyRisk = (r: Risk) => r.unknown || r.thinBuffer || r.loanBehind || r.shortThisMonth;
 /** Runway under EI 55% from the judge inputs, for the "fragile" nudge (null = no shortfall). */
 export function ei55Runway(j: Judging): number | null {
   const gap = j.S - 0.55 * j.I;
@@ -80,6 +84,8 @@ export function ei55Runway(j: Judging): number | null {
 }
 export function runwayTone(r: Runway, j: Judging | undefined, risk: Risk): Tone {
   if (r.status === "depleted") return "bad";
+  if (risk.shortThisMonth || risk.loanBehind) return "bad";
+  if (risk.unknown || risk.thinBuffer) return "warn";
   if (r.no_shortfall) return (j && j.S === 0) || anyRisk(risk) ? "warn" : "good";
   return r.months < 3 ? "bad" : r.months < 6 ? "warn" : "good";
 }
@@ -110,14 +116,19 @@ export function backupSteps(b: BackupPlan, risk: Risk, mode: Mode): string[] {
 }
 
 // ── Data ─────────────────────────────────────────────────────────────────────────────────────────────
-export function useShock(accountId: number | null, components: ShockComponent[] | null) {
-  const shock = useMemo(() => (accountId && components && components.length ? { account_id: accountId, components, mode: "judging" as const } : null), [accountId, components]);
-  const sim = useQuery({ queryKey: ["sim", shock], queryFn: () => api<SimResult>("/shocks/simulate", { method: "POST", json: shock }), enabled: !!shock, placeholderData: (prev) => prev });
-  const backup = useQuery({ queryKey: ["backup", shock], queryFn: () => api<BackupPlan>("/recovery/backup-plan", { method: "POST", json: { account_id: accountId, shock } }), enabled: !!shock, placeholderData: (prev) => prev });
+export function useShock(accountId: number | null, components: ShockComponent[] | null, options?: ScenarioDraft) {
+  const mode = options?.mode ?? "judging";
+  const horizon = options?.horizon_months ?? 24;
+  const cut = mode === "extended" ? options?.discretionary_cut_pct ?? 0 : 0;
+  const shock = useMemo(() => (accountId && components && components.length ? { account_id: accountId, components, mode, horizon_months: horizon, discretionary_cut_pct: cut } : null), [accountId, components, mode, horizon, cut]);
+  const sim = useQuery({ queryKey: ["sim", shock], queryFn: () => api<SimResult>("/shocks/simulate", { method: "POST", json: shock }), enabled: !!shock });
+  const backup = useQuery({ queryKey: ["backup", shock], queryFn: () => api<BackupPlan>("/recovery/backup-plan", { method: "POST", json: { account_id: accountId, shock } }), enabled: !!shock });
   return { shock, sim, backup };
 }
 export function useAccountExtras(accountId: number | null) {
-  const goal = useQuery({ queryKey: ["goal", accountId], queryFn: () => api<GoalPlan>("/recovery/goal-plan", { method: "POST", json: { account_id: accountId } }), enabled: !!accountId });
+  const { draft } = useGoalDraft(accountId);
+  const body = goalRequest(draft);
+  const goal = useQuery({ queryKey: ["goal", body], queryFn: () => api<GoalPlan>("/recovery/goal-plan", { method: "POST", json: body }), enabled: !!accountId });
   const obl = useQuery({ queryKey: ["obligations", accountId], queryFn: () => api<Obligations>(`/accounts/${accountId}/obligations`), enabled: !!accountId });
   return { goal, obl };
 }
@@ -190,13 +201,13 @@ export function NowCard({ o, j, risk, mode, compact = false, bare = false }: { o
   const gapToB = j && o.balance != null && j.B > 0 && Math.abs(o.balance - j.B) / j.B > 0.25;
   const headline = o.balance == null ? "No balance on record for this account."
     : o.status === "short" ? (mode === "customer"
-      ? <>Your fixed payments this month (<b>{money(o.fixed_total)}</b>) are more than what&apos;s in your account (<b>{money(o.balance)}</b>). You&apos;re short about <span className="marker font-semibold">{money(-(o.left_after_fixed ?? 0))}</span>.</>
+      ? <>Your known fixed payments (<b>{money(o.fixed_total)}</b>) are more than the latest recorded balance (<b>{money(o.balance)}</b>). You&apos;re short about <span className="marker font-semibold">{money(-(o.left_after_fixed ?? 0))}</span>.</>
       : <>Fixed payments {money(o.fixed_total)} exceed the month-end balance {money(o.balance)} by {money(-(o.left_after_fixed ?? 0))}.</>)
     : o.status === "tight" ? (mode === "customer"
-      ? <>Your fixed payments are covered, but only <span className="marker font-semibold">{money(o.left_after_fixed)}</span> is left for everything else this month.</>
+      ? <>The recorded balance covers known fixed payments, but only <span className="marker font-semibold">{money(o.left_after_fixed)}</span> is left for everything else this month.</>
       : <>Covered, but only {money(o.left_after_fixed)} remains after fixed payments (under half a month of spending).</>)
     : (mode === "customer"
-      ? <>You&apos;re covered this month: <b>{money(o.left_after_fixed)}</b> left after your fixed payments.</>
+      ? <>Based on the latest recorded balance: <b>{money(o.left_after_fixed)}</b> left after your fixed payments.</>
       : <>Covered: {money(o.left_after_fixed)} remains after fixed payments.</>);
   const Icon = TONE_ICON[tone];
   const details = (
@@ -214,10 +225,11 @@ export function NowCard({ o, j, risk, mode, compact = false, bare = false }: { o
   );
   const body = (
       <div className="space-y-3">
+        <ReadAloud text={`Latest record: ${o.as_of_month}. Fixed payments ${money(o.fixed_total)}. Month-end balance ${money(o.balance)}. Remaining after fixed payments ${money(o.left_after_fixed)}. ${risk.loanBehind ? "The loan record shows overdue payments." : ""} Check current balances and due dates; these are historical records.`} />
         <p className={cn("flex gap-2.5 rounded-xl p-3.5 text-[15px] leading-relaxed", TONE_BOX[tone])}><Icon key={`i-${tone}`} className="mt-0.5 size-5 shrink-0" aria-hidden /><span key={`h-${o.status}`} className="text-ink">{headline}</span></p>
         {risk.loanBehind && (
           <p className="flex gap-2.5 rounded-xl bg-bad-bg p-3.5 text-[15px] leading-relaxed text-ink"><Phone className="mt-0.5 size-5 shrink-0 text-bad" aria-hidden />
-            {mode === "customer" ? <span><b>Your loan is behind on payments.</b> Calling your lender now, before the next payment, gives you the most options.</span> : <span><b>Loan status D</b> — running, client in arrears ({money(o.loan?.monthly_payment)}/mo).</span>}</p>
+            {mode === "customer" ? <span><b>Your loan is behind on payments.</b> Check the current payment status and contact your lender to discuss available options.</span> : <span><b>Loan status D</b> — running, client in arrears ({money(o.loan?.monthly_payment)}/mo).</span>}</p>
         )}
         {risk.pastDefault && <Note tone="warn">{mode === "customer" ? "A previous loan on this account was not fully repaid." : "Loan status B — finished, not repaid (past default)."}</Note>}
         {risk.thinBuffer && j && <Note tone="warn">{mode === "customer" ? <>You have less than one month of spending saved ({money(j.B)} vs about {money(j.S)} a month).</> : <>Buffer covers {(j.B / j.S).toFixed(1)} months of spending.</>}</Note>}
@@ -232,70 +244,21 @@ export function NowCard({ o, j, risk, mode, compact = false, bare = false }: { o
 
 /** Safety-net plan. Customer copy points at the Tangerine products it would use (Goals + Automatic Savings Program). */
 export function GoalCard({ g, j, mode, n, risk, summary = false }: { g?: GoalPlan; j?: Judging; mode: Mode; n?: number; risk: Risk; summary?: boolean }) {
-  return (
-    <Section n={n} title={mode === "customer" ? (summary ? "Your safety net" : "Build your safety net") : "Goal Plan"}
-      desc={mode === "customer" ? (summary ? undefined : "Small steps first") : "For the customer: 1-month milestone, then 3 months"}
-      right={summary ? <Link href="/plan" className="flex min-h-11 items-center gap-1 text-[15px] font-medium text-tangerine">Plan<ArrowRight className="size-4" aria-hidden /></Link> : undefined}>
-      {!g || !j ? <Skeleton className="h-28" /> : g.target <= 0 ? (
-        <p className="text-[15px] leading-relaxed">{mode === "customer" ? "We can't size a safety net from this account because almost no spending goes through it." : "No typical monthly spending (S = 0), so a 3-month target can't be sized from this account."}</p>
-      ) : (() => {
-        const c = g.recommended_monthly_contribution;
-        const first = Math.max(j.S - Math.max(j.B, 0), 0);
-        const firstMonths = c > 0 ? Math.ceil(first / c) : null;
-        const pct = Math.round(Math.min(Math.max(g.progress_pct, 0), 100));
-        const stabilise = risk.shortThisMonth || risk.loanBehind;
-        const bar = (
-          <div>
-            <div className="mb-1.5 flex justify-between text-[13px] text-ink-3"><span>{money(g.current_buffer)} saved</span><span>Goal {money(g.target)}</span></div>
-            <div className="relative h-2 w-full rounded-full bg-track" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Safety net progress">
-              <div className="h-full rounded-full bg-tangerine" style={{ width: `${pct}%` }} />
-              <span aria-hidden className="absolute top-1/2 h-3.5 w-0.5 -translate-y-1/2 rounded bg-ink-3" style={{ left: `${Math.min((j.S / g.target) * 100, 100)}%` }} />
-            </div>
-            <p className="mt-1 text-[12px] text-ink-3">Tick = one month of spending</p>
-          </div>
-        );
-        if (summary) {
-          return (
-            <div className="space-y-3 text-[15px] leading-relaxed">
-              {bar}
-              <p key={`${g.months_to_goal === 0}-${stabilise}-${c <= 0}-${first > 0}`}>{g.months_to_goal === 0 ? "Three months of spending saved. Nice." : stabilise ? "Get this month's payments sorted first, then start saving." : c <= 0 ? "Nothing left to save right now — see your plan for where to start." : first > 0 ? <>Next: one month saved ({money(j.S)}) in about <b>{firstMonths != null ? duration(firstMonths) : "—"}</b> at {money(c)} a month.</> : <>Next: three months saved in about <b>{g.months_to_goal != null ? duration(g.months_to_goal) : "—"}</b>.</>}</p>
-            </div>
-          );
-        }
-        return (
-          <div className="space-y-4 text-[15px] leading-relaxed">
-            {bar}
-            {g.months_to_goal === 0 ? (
-              <p>{mode === "customer" ? "You already have three months of spending saved. Keep it in a separate savings account." : "Target already reached."}</p>
-            ) : c <= 0 ? (
-              <p>{mode === "customer" ? "Right now your spending uses all of your income, so there's nothing left to save. Start with the steps under “What if” to free up cash first." : "No monthly surplus: saving needs spending reductions first."}</p>
-            ) : (
-              <ol className="space-y-2.5">
-                {stabilise && (
-                  <li className="rounded-xl bg-bad-bg p-3"><span className="block text-[12px] font-semibold uppercase tracking-[0.02em] text-bad">First</span>
-                    {mode === "customer" ? "Get this month's payments and your loan back on track (see “Right now”). Start saving once that's done — even a small amount." : "Arrears / payments above balance: stabilise first; savings plan starts after."}</li>
-                )}
-                {first > 0 && (
-                  <li className="rounded-xl bg-cream p-3"><span className="block text-[12px] font-semibold uppercase tracking-[0.02em] text-ink-3">{stabilise ? "Then" : "Step 1"}</span>
-                    {mode === "customer"
-                      ? <>Set up a <b>Goal</b> in your Tangerine Savings Account with an <b>Automatic Savings Program</b> of <span className="marker font-semibold">{money(c)} a month</span> on payday. You&apos;d reach one month of spending ({money(j.S)}) in about <b>{firstMonths != null ? duration(firstMonths) : "—"}</b>.</>
-                      : <>Goal + ASP of <span className="marker font-semibold">{money(c)}/mo</span> (50% of surplus) → 1 month of S ({money(j.S)}) in ~<b>{firstMonths != null ? duration(firstMonths) : "—"}</b>.</>}</li>
-                )}
-                <li className="rounded-xl bg-cream p-3"><span className="block text-[12px] font-semibold uppercase tracking-[0.02em] text-ink-3">Later</span>
-                  Keep going to three months ({money(g.target)}) — about <b>{g.months_to_goal != null ? duration(g.months_to_goal) : "—"}</b> at this pace{(g.months_to_goal ?? 0) > 24 ? "; raising the amount when income allows shortens it a lot" : ""}.</li>
-              </ol>
-            )}
-            {mode === "customer" && c > 0 && g.months_to_goal !== 0 && (
-              <button type="button" disabled title="Concept: would open Goals with these amounts filled in"
-                className="flex min-h-11 w-full cursor-not-allowed items-center justify-center gap-2 rounded-full bg-tangerine/40 text-[15px] font-semibold text-white">
-                Set up this Goal <Badge tone="neutral" className="bg-white/70">Concept</Badge>
-              </button>
-            )}
-          </div>
-        );
-      })()}
-    </Section>
-  );
+  const stabilise = risk.shortThisMonth || risk.loanBehind;
+  const speech = g ? `Your savings target is ${money(g.target)}. Current buffer: ${money(g.current_buffer)}. Suggested monthly contribution: ${money(g.recommended_monthly_contribution)}. ${stabilise ? "The payment risk needs attention before adding savings commitments." : "The estimate uses your recorded account history."}` : "";
+  return <Section n={n} title={mode === "customer" ? (summary ? "Your safety net" : "Build your safety net") : "Goal Plan"}
+    desc={summary ? undefined : "Current target and contribution estimate"}
+    right={<div className="flex flex-wrap items-center gap-2">{g && <ReadAloud text={speech} />}{summary && <Link href="/plan" className="flex min-h-11 items-center gap-1 text-sm font-medium text-tangerine">Plan<ArrowRight className="size-4" aria-hidden /></Link>}</div>}>
+    {!g || !j ? <Skeleton className="h-28" /> : g.target <= 0 ? <p className="text-[15px] leading-relaxed">There is not enough spending history to size this target.</p> : <div className="space-y-3 text-[15px] leading-relaxed">
+      <div className="flex flex-wrap justify-between gap-2 text-sm text-ink-2"><span>{money(g.current_buffer)} saved</span><span>Goal {money(g.target)}</span></div>
+      <div className="h-2 rounded-full bg-track" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(Math.min(Math.max(g.progress_pct, 0), 100))} aria-label="Safety net progress"><div className="h-full rounded-full bg-tangerine" style={{ width: `${Math.min(Math.max(g.progress_pct, 0), 100)}%` }} /></div>
+      {stabilise && <Note tone="bad">The recorded payment shortfall or overdue loan needs attention before adding a savings commitment. This target does not resolve that risk.</Note>}
+      {g.months_to_goal === 0 ? <p>Your current buffer covers this target. Keep checking your payment commitments and changes in income.</p>
+        : g.recommended_monthly_contribution <= 0 ? <p>The recorded typical month leaves no surplus for this target. Review the income and spending assumptions before choosing a contribution.</p>
+        : <p>Suggested contribution: <b>{money(g.recommended_monthly_contribution)} a month</b>. At this rate, the target could be reached in about <b>{g.months_to_goal != null ? duration(g.months_to_goal) : "an unknown period"}</b>, if the assumptions hold.</p>}
+      {!summary && <p className="text-xs text-ink-2">This is a plan estimate. No bank goal is created and no money is transferred.</p>}
+    </div>}
+  </Section>;
 }
 
 export function ResultView({ sim, j, risk, mode }: { sim: SimResult; j?: Judging; risk: Risk; mode: Mode }) {
@@ -304,10 +267,11 @@ export function ResultView({ sim, j, risk, mode }: { sim: SimResult; j?: Judging
   const v = sim.verdict;
   return (
     <div className="space-y-5">
+      <ReadAloud text={`Under this scenario, monthly income is ${money(sim.scenario.income)}, spending is ${money(sim.scenario.spending)}, and runway is ${after.display} months. ${anyRisk(risk) ? "Existing payment or savings risks still need attention." : ""} This is a simulation, not a prediction.`} />
       <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
         <div>
-          <p className="text-[13px] font-semibold text-ink-3">{mode === "customer" ? "Today" : "Before"}</p>
-          <p className="tabular font-display text-[34px] font-bold leading-tight tracking-[-0.02em] text-ink-3">{mode === "customer" && before.no_shortfall ? "Covered" : bigRunway(before)}</p>
+          <p className="text-[13px] font-semibold text-ink-3">{mode === "customer" ? "Recorded baseline" : "Before"}</p>
+          <p className="tabular font-display text-[34px] font-bold leading-tight tracking-[-0.02em] text-ink-3">{mode === "customer" && before.no_shortfall ? "No monthly gap" : bigRunway(before)}</p>
           <p className="text-[12px] text-ink-3">{mode === "customer" && before.no_shortfall ? "income covers spending" : runwayCaption(before)}</p>
         </div>
         <ArrowRight className="mb-6 size-6 text-ink-3" aria-hidden />
@@ -318,7 +282,7 @@ export function ResultView({ sim, j, risk, mode }: { sim: SimResult; j?: Judging
         </div>
       </div>
       {v && (
-        <Note key={`${after.no_shortfall}-${v.survives}`} tone={after.no_shortfall ? tone : v.survives ? "good" : "bad"}>
+        <Note key={`${after.no_shortfall}-${v.survives}`} tone={tone}>
           <b>{after.no_shortfall
             ? (j && j.S === 0 ? "No shortfall — but only because this account shows almost no spending." : anyRisk(risk) ? "Income would still cover spending in a typical month — but this month's payments are already tight." : "Yes — income still covers spending, so savings aren't drawn down.")
             : mode === "customer" ? (v.survives ? `Yes — your savings would last about ${after.display} months, longer than the ${v.required_months}-month period.` : `No — your savings would run out after about ${after.display} months, ${(v.required_months - after.months).toFixed(1)} months short.`) : v.text}</b>
@@ -353,6 +317,7 @@ export function ResultView({ sim, j, risk, mode }: { sim: SimResult; j?: Judging
 export function BackupView({ b, risk, mode }: { b: BackupPlan; risk: Risk; mode: Mode }) {
   return (
     <div className="space-y-3 text-[15px] leading-relaxed">
+      <ReadAloud text={`Monthly shortfall under this scenario: ${money(b.monthly_shortfall)}. ${backupSteps(b, risk, mode).join(" ")}`} />
       {b.monthly_shortfall > 0
         ? <p>{mode === "customer" ? "You'd" : "Customer would"} be short about <span className="marker font-semibold">{money(b.monthly_shortfall)} a month</span>.</p>
         : <p>Income would still cover spending.</p>}

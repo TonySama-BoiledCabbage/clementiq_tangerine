@@ -14,13 +14,14 @@ import { cn } from "@/lib/utils";
 
 const schema = z.object({
   role: z.enum(["judge", "customer", "admin"]),
+  display_name: z.string().max(40).optional(),
   access_code: z.string().min(1, "Access code required"),
   account_id: z.string().regex(/^\d*$/, "Digits only").optional(),
 }).refine((v) => v.role !== "customer" || !!v.account_id, { path: ["account_id"], message: "Customer sign-in needs an account_id" });
 type Form = z.infer<typeof schema>;
 
 const ROLES: { id: Role; label: string; desc: string; icon: React.ElementType }[] = [
-  { id: "judge", label: "Judge demo", desc: "Read-only access to any account in the challenge dataset.", icon: Gavel },
+  { id: "judge", label: "Judge demo", desc: "Explore the challenge dataset; save your own demo scenarios.", icon: Gavel },
   { id: "customer", label: "Customer", desc: "Access scoped to a single account_id.", icon: UserRound },
   { id: "admin", label: "Admin", desc: "Data import and operations.", icon: ShieldCheck },
 ];
@@ -31,7 +32,7 @@ function LoginForm() {
   const setSession = useSession((s) => s.setSession);
   const [err, setErr] = useState<string | null>(null);
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<Form>({
-    resolver: zodResolver(schema), defaultValues: { role: "judge", access_code: "", account_id: "" },
+    resolver: zodResolver(schema), defaultValues: { role: "judge", access_code: "", account_id: "", display_name: "" },
   });
   const role = watch("role");
   const showCodes = process.env.NEXT_PUBLIC_SHOW_DEMO_CODES === "true";
@@ -40,7 +41,7 @@ function LoginForm() {
     setErr(null);
     try {
       const r = await api<{ access_token: string; role: Role; sub: string; account_id: number | null; expires_at: string }>(
-        "/auth/demo-login", { method: "POST", json: { role: v.role, access_code: v.access_code.trim(), account_id: v.account_id ? Number(v.account_id) : null } });
+        "/auth/demo-login", { method: "POST", json: { role: v.role, access_code: v.access_code.trim(), account_id: v.account_id ? Number(v.account_id) : null, display_name: v.display_name || null } });
       setSession({ token: r.access_token, role: r.role, sub: r.sub, account_id: r.account_id, expires_at: r.expires_at });
       router.replace(next.startsWith("/") ? next : "/");
     } catch (e) {
@@ -60,6 +61,7 @@ function LoginForm() {
           </button>
         ))}
       </div>
+      {role !== "customer" && <div><Label htmlFor="display-name">Demo name (optional)</Label><Input id="display-name" maxLength={40} {...register("display_name")} /><p className="mt-1 text-xs text-ink-2">Use a consistent name to keep your own settings and saved scenarios.</p></div>}
       {role === "customer" && (
         <div>
           <Label htmlFor="acc">account_id</Label>

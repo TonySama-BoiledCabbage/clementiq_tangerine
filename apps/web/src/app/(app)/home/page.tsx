@@ -31,6 +31,7 @@ export default function HomePage() {
       {s.error && <ErrorState error={s.error} />}
       {obl.data ? <NowCard o={obl.data} j={j} risk={risk} mode="customer" compact />
         : obl.error ? <ErrorState error={obl.error} /> : <Skeleton className="h-40 rounded-2xl shadow-card" />}
+      {goal.error && <ErrorState error={goal.error} />}
       <GoalCard g={goal.data} j={j} mode="customer" risk={risk} summary />
       {fragile && (
         <Link href="/what-if?scenario=ei55_6m" className="flex items-center gap-4 rounded-2xl shadow-card bg-surface p-5 active:bg-press">

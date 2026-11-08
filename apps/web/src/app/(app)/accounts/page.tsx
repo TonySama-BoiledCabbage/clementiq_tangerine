@@ -1,4 +1,5 @@
 "use client";
+import { CustomerSelector } from "@/components/layout/CustomerSelector";
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
@@ -35,6 +36,7 @@ export default function AccountsPage() {
         <p className="mt-1 text-[15px] text-ink-3">Who needs help now, most urgent first. Open one to run the stress test.</p>
       </div>
 
+      <CustomerSelector destination="/judge" />
       {q.error && <ErrorState error={q.error} />}
       {!d ? <Skeleton className="h-24 rounded-2xl shadow-card" /> : (
         <section aria-label="Needs attention summary" className="rounded-2xl shadow-card bg-surface p-5">

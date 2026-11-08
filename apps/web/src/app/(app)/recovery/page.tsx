@@ -1,12 +1,13 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { Runway, ShockComponent } from "@clementiq/shared-types";
 import { api } from "@/lib/api";
 import { compactMoney, money } from "@/lib/format";
-import { useAccount, usePresets } from "@/lib/hooks";
+import { DEFAULT_SHOCK, goalRequest } from "@/lib/analysis";
+import { useAccount, usePresets, useScenarioDraft, useGoalDraft } from "@/lib/hooks";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label, Select } from "@/components/ui/input";
@@ -37,9 +38,9 @@ interface BackupPlan {
 }
 
 function GoalTab({ accountId }: { accountId: number }) {
-  const [p, setP] = useState({ target_months: 3, target_basis: "spending", contribution_share_pct: 50, discretionary_cut_pct: 0, deadline_months: 0 });
-  const body = { account_id: accountId, ...p, deadline_months: p.deadline_months || null };
-  const q = useQuery({ queryKey: ["goal", body], queryFn: () => api<GoalPlan>("/recovery/goal-plan", { method: "POST", json: body }), placeholderData: keepPreviousData });
+  const { draft: p, update: setP } = useGoalDraft(accountId);
+  const body = goalRequest(p);
+  const q = useQuery({ queryKey: ["goal", body], queryFn: () => api<GoalPlan>("/recovery/goal-plan", { method: "POST", json: body }) });
   const g = q.data;
   return (
     <div className="grid gap-6 xl:grid-cols-[340px_1fr]">
@@ -109,16 +110,18 @@ function GoalTab({ accountId }: { accountId: number }) {
 
 function BackupTab({ accountId }: { accountId: number }) {
   const presets = usePresets();
-  const [components, setComponents] = useState<ShockComponent[]>([{ type: "job_loss", income_replacement_pct: 55, duration_months: 6 }]);
-  const shock = useMemo(() => ({ account_id: accountId, components, mode: "judging" as const }), [accountId, components]);
-  const q = useQuery({ queryKey: ["backup", shock], queryFn: () => api<BackupPlan>("/recovery/backup-plan", { method: "POST", json: { account_id: accountId, shock } }), placeholderData: keepPreviousData });
+  const { draft, update } = useScenarioDraft(accountId, DEFAULT_SHOCK);
+  const components = draft.components ?? DEFAULT_SHOCK;
+  const setComponents = (components: ShockComponent[]) => update({ components });
+  const shock = useMemo(() => ({ ...draft, components, discretionary_cut_pct: draft.mode === "extended" ? draft.discretionary_cut_pct : 0 }), [draft, components]);
+  const q = useQuery({ queryKey: ["backup", shock], queryFn: () => api<BackupPlan>("/recovery/backup-plan", { method: "POST", json: { account_id: accountId, shock } }) });
   const b = q.data;
   const tiers = b?.alternatives.map((a) => ({ name: a.name ?? "", runway: a.runway.months_precise, display: a.runway.display })) ?? [];
   return (
     <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
       <Card>
-        <CardHeader><div><CardTitle>If the shock hits…</CardTitle><CardDescription>Judging-mode shock</CardDescription></div></CardHeader>
-        <CardContent>{presets.data ? <ShockScenarioSelector components={components} onChange={setComponents} types={presets.data.types} presets={presets.data.presets} onPreset={(p) => setComponents(p.components)} mode="judging" /> : <Skeleton className="h-60" />}</CardContent>
+        <CardHeader><div><CardTitle>If the shock hits…</CardTitle><CardDescription>{draft.mode === "judging" ? "Judging-mode shock" : "Extended-mode shock"}</CardDescription></div></CardHeader>
+        <CardContent>{presets.data ? <ShockScenarioSelector components={components} onChange={setComponents} types={presets.data.types} presets={presets.data.presets} onPreset={(p) => setComponents(p.components)} mode={draft.mode} /> : <Skeleton className="h-60" />}</CardContent>
       </Card>
       <div className="space-y-4">
         {q.error && <ErrorState error={q.error} />}

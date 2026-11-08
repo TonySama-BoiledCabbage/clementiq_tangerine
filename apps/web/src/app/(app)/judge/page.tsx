@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { Glossary } from "@/components/ui/reading";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -8,7 +8,7 @@ import type { ShockComponent } from "@clementiq/shared-types";
 import { api } from "@/lib/api";
 import { money } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { useAccount, usePresets, useSummary } from "@/lib/hooks";
+import { useAccount, usePresets, useSummary, useScenarioDraft } from "@/lib/hooks";
 import { useSession } from "@/lib/store";
 import { Badge } from "@/components/ui/badge";
 import { ErrorState, Skeleton, Spinner } from "@/components/ui/misc";
@@ -37,9 +37,10 @@ export default function StressTestPage() {
 
   const s = useSummary(accountId);
   const presets = usePresets();
-  const [picked, setPicked] = useState<ShockComponent[] | null>(null);
-  const components = picked ?? ANALYST_DEFAULT;
-  const { shock, sim, backup } = useShock(accountId, components);
+  const { draft, update } = useScenarioDraft(accountId, ANALYST_DEFAULT);
+  const components = draft.components ?? ANALYST_DEFAULT;
+  const setPicked = (components: ShockComponent[] | null) => update({ components });
+  const { shock, sim, backup } = useShock(accountId, components, draft);
   const { goal, obl } = useAccountExtras(accountId);
   const verify = useQuery({ queryKey: ["verify", accountId], queryFn: () => api<Verify>(`/judge/verify/${accountId}`), enabled: !!accountId && allowed });
 
@@ -109,7 +110,7 @@ export default function StressTestPage() {
           </section>
 
           {/* 2 · Twist card, with the new numbers directly beneath it. */}
-          <Section title="Twist card" desc="Judging Mode · README formulas only"
+          <Section title="Twist card" desc={draft.mode === "judging" ? "Judging Mode · README formulas only" : "Extended Mode · additional assumptions apply"}
             right={<div className="flex items-center gap-2">{sim.isFetching && <Spinner />}{verify.data && (verify.data.all_match
               ? <Badge tone="good"><CheckCircle2 aria-hidden /> README check</Badge> : <Badge tone="bad"><XCircle aria-hidden /> mismatch</Badge>)}</div>}>
             <div className="space-y-5">
@@ -119,7 +120,7 @@ export default function StressTestPage() {
                   <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1 text-[15px] font-medium text-tangerine [&::-webkit-details-marker]:hidden">More twist cards, sizes and combinations<ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden /></summary>
                   <div className="pt-3">
                     <ShockScenarioSelector components={components} onChange={setPicked} types={presets.data.types} presets={others}
-                      onPreset={(p) => setPicked(p.components)} mode="judging" sValue={j?.S} presetsLabel="More twist cards" />
+                      onPreset={(p) => setPicked(p.components)} mode={draft.mode} sValue={j?.S} presetsLabel="More twist cards" />
                   </div>
                 </details>
               )}
@@ -171,6 +172,7 @@ export default function StressTestPage() {
           </div>
         </>
       )}
+      <Glossary />
     </div>
   );
 }
