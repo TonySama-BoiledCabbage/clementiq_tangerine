@@ -38,8 +38,10 @@ export const moreFor = (role: Role | null | undefined) => [
   ...(role === "judge" ? [{ href: "/admin", label: "Dataset status", icon: Database }] : []),
 ];
 
-/** Phone bottom tabs (iOS tab-bar pattern): three top-level pages + "More". `match` lights a tab for pages reached from it. */
+/** Phone tabs keep account details directly reachable when the desktop sidebar is hidden. */
 export function tabsFor(role: Role | null | undefined): NavItem[] {
-  const more = moreFor(role).map((n) => n.href);
-  return [...navFor(role), { href: "/more", label: "More", icon: Ellipsis, match: [...more, "/settings", "/admin"] }];
+  const secondary = moreFor(role);
+  const details = secondary.find((n) => n.href === "/dashboard")!;
+  const more = secondary.filter((n) => n !== details).map((n) => n.href);
+  return [...navFor(role), { ...details, label: role === "customer" ? "Details" : "Profile" }, { href: "/more", label: "More", icon: Ellipsis, match: [...more, "/settings", "/admin"] }];
 }

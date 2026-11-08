@@ -7,7 +7,7 @@ import { tabsFor } from "./nav";
 
 /**
  * Phone tab bar (< lg) in the iOS 26/27 Liquid Glass form: a floating capsule inset from the screen edges.
- * - top-level destinations only (4 tabs, within the 3–5 guideline); secondary pages live behind "More"
+ * - primary destinations and account details (5 tabs); other secondary pages live behind "More"
  * - icon AND label on every tab; the current tab gets the accent colour, a heavier icon and a glass selection pill
  * - sits above the home indicator via env(safe-area-inset-bottom); every tab is a ≥ 44pt hit area
  */
