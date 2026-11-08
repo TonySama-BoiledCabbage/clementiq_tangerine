@@ -73,6 +73,7 @@ def delete_scenario(sid: int, p: Principal = Depends(current_principal), db: Ses
         raise HTTPException(404, "not found")
     for r in db.execute(select(models.ScenarioResult).where(models.ScenarioResult.scenario_id == sid)).scalars():
         db.delete(r)
+    db.flush()  # Delete dependent results before the scenario on both PostgreSQL and SQLite.
     db.delete(s)
     db.commit()
     return {"deleted": sid}
