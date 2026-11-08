@@ -72,8 +72,9 @@ def job_markets(db: Session) -> dict[str, Any]:
 def watched_pairs(db: Session) -> list[tuple[str, int]]:
     pairs: set[tuple[str, int]] = set()
     for p in db.execute(select(models.UserPreference)).scalars():
-        for acc in (p.data or {}).get("watched_accounts", []):
-            pairs.add((p.owner, int(acc)))
+        if not p.owner.startswith("customer:"):
+            for acc in (p.data or {}).get("watched_accounts", []):
+                pairs.add((p.owner, int(acc)))
         if p.owner.startswith("customer:"):
             try:
                 pairs.add((p.owner, int(p.owner.split(":")[1])))
@@ -88,7 +89,7 @@ def job_alerts(db: Session) -> dict[str, Any]:
     res = {}
     for owner, acc in watched_pairs(db):
         try:
-            res[f"{owner}:{acc}"] = generate_alerts(db, owner, acc, explain=1)
+            res[f"{owner}:{acc}"] = generate_alerts(db, owner, acc, explain=0)
         except Exception as exc:  # noqa: BLE001
             db.rollback()
             res[f"{owner}:{acc}"] = {"error": str(exc)[:200]}

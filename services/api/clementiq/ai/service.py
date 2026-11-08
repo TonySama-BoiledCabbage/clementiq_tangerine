@@ -10,6 +10,8 @@ import logging
 from typing import Any
 
 from sqlalchemy import select
+from ..config import get_settings
+from ..core.provenance import ENGINE_VERSION
 from sqlalchemy.orm import Session
 
 from .. import models
@@ -42,10 +44,20 @@ def _store(db: Session | None, kind: str, h: str, out: dict[str, Any]) -> None:
     db.commit()
 
 
-def _run(db, kind: str, facts: dict[str, Any], prompt: str, schema, fallback_fn, use_cache=True) -> dict[str, Any]:
-    h = stable_hash({"kind": kind, "facts": facts})
+AI_OFF_REASON = "Personalized AI guidance is turned off in Settings → Privacy & AI"
+
+
+def _run(db, kind: str, facts: dict[str, Any], prompt: str, schema, fallback_fn, use_cache=True,
+         allow_ai: bool = True, cache_scope: str = "") -> dict[str, Any]:
+    if not allow_ai:
+        return {"engine": FALLBACK_ENGINE, "content": fallback_fn(), "fallback_reason": AI_OFF_REASON}
+    h = stable_hash({"kind": kind, "facts": facts, "scope": cache_scope,
+                     "model": get_settings().gemini_model, "core": ENGINE_VERSION,
+                     "prompt": "minimal-v1", "schema": schema.__name__})
     if use_cache and (hit := _cached(db, kind, h)):
         return {**hit, "cached": True}
+    if len(prompt) > get_settings().ai_max_prompt_chars:
+        return {"engine": FALLBACK_ENGINE, "content": fallback_fn(), "fallback_reason": "Explanation input exceeds the configured budget"}
     allowed = gemini.collect_numbers(facts)
     try:
         parsed, meta = gemini.generate_json(prompt, schema)
@@ -56,16 +68,19 @@ def _run(db, kind: str, facts: dict[str, Any], prompt: str, schema, fallback_fn,
             out = {"engine": FALLBACK_ENGINE, "content": fallback_fn(), "number_check": check,
                    "fallback_reason": "AI output contained figures not produced by Clement Core"}
         else:
-            out = {"engine": meta["engine"], "model": meta["model"], "content": content, "number_check": check}
+            out = {"engine": meta["engine"], "model": meta["model"], "content": content, "number_check": check, "usage": meta.get("usage", {})}
     except gemini.GeminiUnavailable as exc:
         out = {"engine": FALLBACK_ENGINE, "content": fallback_fn(), "fallback_reason": str(exc)[:200]}
-    _store(db, kind, h, out)
+    # Templates are cheap and may reflect a temporary provider outage; do not cache them forever.
+    if out["engine"] != FALLBACK_ENGINE:
+        _store(db, kind, h, out)
+        log.info("ai_usage kind=%s model=%s usage=%s", kind, out.get("model"), out.get("usage"))
     return out
 
 
 # ------------------------------------------------------------------ scenario ----------
 def explain_scenario(db: Session | None, sim: dict[str, Any], context: dict[str, Any],
-                     sources: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+                     sources: list[dict[str, Any]] | None = None, allow_ai: bool = True, cache_scope: str = "") -> dict[str, Any]:
     facts = {
         "customer": context,
         "baseline": {k: sim["baseline"][k] for k in ("income", "spending", "B", "H", "F", "P")},
@@ -116,13 +131,13 @@ def explain_scenario(db: Session | None, sim: dict[str, Any], context: dict[str,
         }
 
     out = _run(db, "scenario", {**facts, "sources": [s.get("id") for s in sources or []]}, prompt,
-               ScenarioExplanation, fb)
+               ScenarioExplanation, fb, allow_ai=allow_ai, cache_scope=cache_scope)
     if flagged:
         out["injection_flags"] = flagged
     return out
 
 
-def explain_plan(db: Session | None, plan: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+def explain_plan(db: Session | None, plan: dict[str, Any], context: dict[str, Any], allow_ai: bool = True, cache_scope: str = "") -> dict[str, Any]:
     if plan["plan_type"] == "goal":
         facts = {k: plan[k] for k in ("current_buffer", "target", "gap", "monthly_surplus",
                                       "recommended_monthly_contribution", "months_to_goal", "status")}
@@ -159,7 +174,7 @@ def explain_plan(db: Session | None, plan: dict[str, Any], context: dict[str, An
         return {"summary": s, "key_steps": steps, "encouragement": "Small, steady steps add up.",
                 "caveats": "Figures are modeled from typical months and are not guarantees."}
 
-    return _run(db, f"plan_{plan['plan_type']}", facts, prompt, PlanExplanation, fb)
+    return _run(db, f"plan_{plan['plan_type']}", facts, prompt, PlanExplanation, fb, allow_ai=allow_ai, cache_scope=cache_scope)
 
 
 def summarize_news(db: Session | None, item: dict[str, Any]) -> dict[str, Any]:
@@ -183,7 +198,7 @@ def summarize_news(db: Session | None, item: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def explain_alert(db: Session | None, alert: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+def explain_alert(db: Session | None, alert: dict[str, Any], context: dict[str, Any], allow_ai: bool = True, cache_scope: str = "") -> dict[str, Any]:
     facts = {"title": alert["title"], "category": alert["category"], "relevance": alert["relevance"],
              "modeled_impact": alert.get("modeled_impact"), "customer": context}
     prompt = ("Explain briefly why this alert is relevant to the customer and suggest one calm, practical "
@@ -193,4 +208,4 @@ def explain_alert(db: Session | None, alert: dict[str, Any], context: dict[str, 
         return {"explanation": alert["relevance"], "suggested_action": alert["suggested_action"],
                 "confidence": "medium"}
 
-    return _run(db, "alert", facts, prompt, AlertExplanation, fb)
+    return _run(db, "alert", facts, prompt, AlertExplanation, fb, allow_ai=allow_ai, cache_scope=cache_scope)

@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, BackgroundTasks, Depends
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
 from .. import models
-from ..auth import LoginRequest, Principal, current_principal, issue_token, require_admin
+from ..auth import LoginRequest, Principal, current_principal, issue_token, require_admin, require_judge
 from ..config import get_settings
 from ..core.provenance import ENGINE_VERSION
 from ..db import get_db
@@ -44,7 +44,11 @@ def demo_login(req: LoginRequest, db: Session = Depends(get_db)):
 
 @router.get("/auth/me")
 def me(p: Principal = Depends(current_principal)):
-    return {"sub": p.sub, "role": p.role, "account_id": p.account_id, "read_only": p.read_only}
+    return {"sub": p.sub, "role": p.role, "account_id": p.account_id, "read_only": p.read_only,
+            "entitlements": {"judge_demo": p.role in ("judge", "admin"),
+                             "account_search": p.role in ("judge", "admin"),
+                             "data_import_view": p.role in ("judge", "admin"),
+                             "data_import_run": p.role == "admin"}}
 
 
 @router.get("/settings")
@@ -59,6 +63,8 @@ def get_settings_route(p: Principal = Depends(current_principal), db: Session = 
 
 @router.patch("/settings")
 def patch_settings(patch: PrefsPatch, p: Principal = Depends(current_principal), db: Session = Depends(get_db)):
+    if p.role == "customer" and patch.watched_accounts is not None and any(a != p.account_id for a in patch.watched_accounts):
+        raise HTTPException(403, "Customers can only watch their bound account")
     row = db.get(models.UserPreference, p.sub)
     current = row.data if row else {}
     merged = merge_prefs(current, patch.model_dump(exclude_none=True, mode="json"))
@@ -78,7 +84,7 @@ def sources(p: Principal = Depends(current_principal), db: Session = Depends(get
 
 
 @router.get("/admin/imports")
-def import_status(p: Principal = Depends(require_admin), db: Session = Depends(get_db)):
+def import_status(p: Principal = Depends(require_judge), db: Session = Depends(get_db)):
     from ..ingestion.schemas import SCHEMAS
     out = []
     for sch in SCHEMAS:

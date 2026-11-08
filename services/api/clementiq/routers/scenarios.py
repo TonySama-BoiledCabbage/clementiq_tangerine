@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .. import models
-from ..auth import Principal, authorize_account, current_principal
+from ..auth import Principal, authorize_account, current_principal, require_judge
 from ..config import get_settings
 from ..core.recovery import BackupPlanRequest, GoalPlanRequest, backup_plan, goal_plan
 from ..core.runway import compute_runway
@@ -148,7 +148,7 @@ def update_checklist(pid: int, body: Checklist, p: Principal = Depends(current_p
 
 
 @router.get("/judge/verify/{account_id}")
-def judge_verify(account_id: int, p: Principal = Depends(current_principal), db: Session = Depends(get_db)):
+def judge_verify(account_id: int, p: Principal = Depends(require_judge), db: Session = Depends(get_db)):
     """Recompute the README twist cards with the reference formulas, independently of the
     simulator code path, and compare. Lets judges confirm the engine matches their worksheet."""
     authorize_account(p, account_id)

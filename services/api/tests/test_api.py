@@ -26,9 +26,9 @@ def test_customer_isolated_to_own_account(client, customer_1001):
     assert [i["account_id"] for i in lst["items"]] == [1001]
 
 
-def test_admin_only_import(client, judge, customer_1001):
+def test_import_run_admin_status_staff(client, judge, customer_1001):
     assert client.post("/api/admin/imports/run", headers=judge).status_code == 403
-    assert client.get("/api/admin/imports", headers=judge).status_code == 403
+    assert client.get("/api/admin/imports", headers=judge).status_code == 200
     assert client.get("/api/admin/imports", headers=customer_1001).status_code == 403
 
 

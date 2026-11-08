@@ -46,7 +46,7 @@ class LoginRequest(BaseModel):
     role: Role = "judge"
     access_code: str = Field(min_length=1, max_length=200)
     account_id: int | None = None
-    display_name: str | None = Field(None, max_length=60)
+    display_name: str | None = Field(None, max_length=40, pattern=r"^[\w .'-]*$")
 
 
 def _code_ok(given: str, expected: str) -> bool:
@@ -62,7 +62,9 @@ def issue_token(req: LoginRequest) -> dict:
                                  f"Check that the matching role card is selected.")
     if req.role == "customer" and req.account_id is None:
         raise HTTPException(422, "customer login requires account_id")
-    sub = f"{req.role}:{req.account_id}" if req.role == "customer" else f"{req.role}:{(req.display_name or 'demo').lower()}"
+    # Each named person gets their own subject, so dashboard preferences and images never mix.
+    name = "-".join((req.display_name or "").strip().lower().split()) or "demo"
+    sub = f"{req.role}:{req.account_id}" if req.role == "customer" else f"{req.role}:{name}"
     exp = datetime.now(timezone.utc) + timedelta(minutes=s.jwt_ttl_minutes)
     payload = {"sub": sub, "role": req.role, "acc": req.account_id, "exp": exp, "iss": "clementiq"}
     token = jwt.encode(payload, s.jwt_secret, algorithm="HS256")
@@ -86,6 +88,24 @@ def current_principal(request: Request,
     principal = decode(creds.credentials)
     request.state.principal = principal
     return principal
+
+
+JUDGE_ROLES: tuple[Role, ...] = ("judge", "admin")
+
+# Server-side entitlements for role-restricted dashboard features. The role comes only from the
+# signed JWT (never from usernames, URL parameters or browser storage).
+RESTRICTED_FEATURES: dict[str, tuple[Role, ...]] = {"judgeDemo": JUDGE_ROLES, "dataImport": JUDGE_ROLES}
+
+
+def entitled(p: Principal, feature_id: str) -> bool:
+    roles = RESTRICTED_FEATURES.get(feature_id)
+    return roles is None or p.role in roles
+
+
+def require_judge(p: Principal = Depends(current_principal)) -> Principal:
+    if p.role not in JUDGE_ROLES:
+        raise HTTPException(403, "This tool is only available to authorized judges")
+    return p
 
 
 def require_admin(p: Principal = Depends(current_principal)) -> Principal:

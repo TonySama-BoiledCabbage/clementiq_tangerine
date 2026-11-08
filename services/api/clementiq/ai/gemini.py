@@ -53,7 +53,9 @@ def _post(body: dict[str, Any]) -> dict[str, Any]:
         raise GeminiUnavailable(f"network error: {exc.__class__.__name__}") from exc
     if resp.status_code != 200:
         raise GeminiUnavailable(f"Gemini HTTP {resp.status_code}: {resp.text[:300]}")
-    return resp.json()
+    data = resp.json()
+    log.info("model_usage model=%s usage=%s", s.gemini_model, data.get("usageMetadata", {}))
+    return data
 
 
 def _text(data: dict[str, Any]) -> str:
@@ -69,7 +71,7 @@ def generate_json(prompt: str, schema: type[T], system: str = SYSTEM_GUARDRAILS,
     body = {
         "systemInstruction": {"parts": [{"text": system}]},
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": temperature, "responseMimeType": "application/json",
+        "generationConfig": {"maxOutputTokens": get_settings().ai_max_output_tokens, "temperature": temperature, "responseMimeType": "application/json",
                              "responseSchema": to_gemini_schema(schema)},
     }
     data = _post(body)
@@ -93,7 +95,7 @@ def grounded_search(question: str) -> dict[str, Any]:
         "systemInstruction": {"parts": [{"text": SYSTEM_GUARDRAILS}]},
         "contents": [{"role": "user", "parts": [{"text": question}]}],
         "tools": [{"google_search": {}}],
-        "generationConfig": {"temperature": 0.2},
+        "generationConfig": {"maxOutputTokens": get_settings().ai_max_output_tokens, "temperature": 0.2},
     }
     data = _post(body)
     cand = data["candidates"][0]
@@ -109,15 +111,19 @@ def chat_with_tools(messages: list[dict[str, Any]], tools: list[dict[str, Any]],
     """Function-calling loop. `executor(name, args) -> dict` runs validated server-side tools."""
     contents = [{"role": m["role"], "parts": [{"text": m["content"]}]} for m in messages]
     calls: list[dict[str, Any]] = []
+    usage: dict[str, int] = {}
     for _ in range(max_rounds):
         body = {
             "systemInstruction": {"parts": [{"text": SYSTEM_GUARDRAILS + CHAT_EXTRA}]},
             "contents": contents,
             "tools": [{"functionDeclarations": tools}],
             "toolConfig": {"functionCallingConfig": {"mode": "AUTO"}},
-            "generationConfig": {"temperature": 0.3},
+            "generationConfig": {"maxOutputTokens": get_settings().ai_max_output_tokens, "temperature": 0.3},
         }
         data = _post(body)
+        for key, value in data.get("usageMetadata", {}).items():
+            if isinstance(value, int):
+                usage[key] = usage.get(key, 0) + value
         try:
             content = data["candidates"][0]["content"]
         except (KeyError, IndexError) as exc:
@@ -125,9 +131,11 @@ def chat_with_tools(messages: list[dict[str, Any]], tools: list[dict[str, Any]],
         fcs = [p["functionCall"] for p in content.get("parts", []) if "functionCall" in p]
         if not fcs:
             return {"text": "".join(p.get("text", "") for p in content.get("parts", []) if not p.get("thought")),
-                    "tool_calls": calls, "engine": "clement-gemini", "model": get_settings().gemini_model}
+                    "tool_calls": calls, "engine": "clement-gemini", "model": get_settings().gemini_model, "usage": usage}
         contents.append(content)  # keep thought signatures intact
         responses = []
+        if len(fcs) > 5:
+            raise GeminiUnavailable("too many parallel tool calls")
         for fc in fcs:
             name, args = fc.get("name"), fc.get("args", {}) or {}
             result = executor(name, args)
@@ -139,6 +147,8 @@ def chat_with_tools(messages: list[dict[str, Any]], tools: list[dict[str, Any]],
 
 CHAT_EXTRA = """
 When you answer:
+- A long runway does not prove current payments are covered. Never infer overall safety from runway alone.
+- Use clear, respectful wording and state material risks and uncertainty directly.
 - Call tools to get facts; never guess customer numbers. If a needed input (e.g. which account,
   shock size) is missing, ask a short clarifying question.
 - Label statements inline as [record], [calculated], [retrieved <date>], [interpretation] or

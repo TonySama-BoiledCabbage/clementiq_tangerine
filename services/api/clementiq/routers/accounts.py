@@ -9,14 +9,14 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from .. import models
-from ..auth import Principal, authorize_account, current_principal
+from ..auth import Principal, authorize_account, current_principal, require_judge
 from ..core.analytics import detect_anomalies, forecast_balance, trends
 from ..core.metrics import baseline_calcs
 from ..core.provenance import envelope
 from ..core.resilience import resilience_score, score_history
 from ..core.runway import compute_runway
 from ..db import get_db
-from ..repository import account_profile, get_baseline, list_accounts, loan_records, monthly_frame, reference_date
+from ..repository import account_profile, get_baseline, list_accounts, loan_records, monthly_frame, reference_date, search_accounts
 
 router = APIRouter(prefix="/api/accounts", tags=["accounts"])
 
@@ -26,8 +26,15 @@ def accounts(q: str | None = Query(None, max_length=10, pattern=r"^\d*$"), limit
              offset: int = Query(0, ge=0), sort: str = "account_id",
              p: Principal = Depends(current_principal), db: Session = Depends(get_db)):
     if p.role == "customer":
-        return list_accounts(db, str(p.account_id), 1, 0)
+        return list_accounts(db, None, 1, 0, exact=p.account_id)
     return list_accounts(db, q, limit, offset, sort)
+
+
+@router.get("/search")
+def account_search(q: str = Query("", max_length=9, pattern=r"^\d*$"),
+                   limit: int = Query(20, ge=1, le=200), offset: int = Query(0, ge=0),
+                   p: Principal = Depends(require_judge), db: Session = Depends(get_db)):
+    return search_accounts(db, q, limit, offset)
 
 
 def _net_position(df: pd.DataFrame, loan) -> list[dict]:

@@ -13,7 +13,7 @@ from ..auth import Principal, authorize_account, current_principal
 from ..core.exposure import INVESTMENT_CHANNELS, TOPIC_CHANNELS, TOPIC_LABELS, ImpactRequest, event_impact
 from ..db import get_db
 from ..jobs import JOBS, monitoring_status, run_job
-from ..repository import audit, get_baseline
+from ..repository import ai_allowed, audit, get_baseline
 from ..worldpulse.service import (HYPOTHETICAL_TEMPLATES, event_dict, latest_magnitude_for_topic, list_indicators,
                                   source_statuses)
 
@@ -115,7 +115,7 @@ def impact(body: ImpactBody, p: Principal = Depends(current_principal), db: Sess
         }
         sources = [{"id": ev.id, "headline": ev.headline, "summary": ev.summary, "source_name": ev.source_name,
                     "published_at": ev.published_at, "source_type": ev.source_type}] if ev else []
-        res["explanation"] = explain_scenario(db, sim_like, financial_context(b), sources)
+        res["explanation"] = explain_scenario(db, sim_like, financial_context(b), sources, allow_ai=ai_allowed(db, p.sub), cache_scope=p.sub)
     return res
 
 
@@ -133,6 +133,8 @@ class ResearchBody(BaseModel):
 @router.post("/research")
 def research(body: ResearchBody, p: Principal = Depends(current_principal), db: Session = Depends(get_db)):
     """Gemini + Google Search grounding (if enabled). Citations come from grounding metadata."""
+    if not ai_allowed(db, p.sub):
+        return {"text": None, "citations": [], "engine": "unavailable", "reason": "Personalized AI is turned off"}
     audit(db, p.sub, "worldpulse_research", None, q=body.question[:200])
     try:
         return gemini.grounded_search(

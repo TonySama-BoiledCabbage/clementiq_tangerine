@@ -186,7 +186,7 @@ def _send_email(to: str, alert: models.Alert) -> bool:
         return False
 
 
-def generate_alerts(db: Session, owner: str, account_id: int, explain: int = 2) -> dict[str, Any]:
+def generate_alerts(db: Session, owner: str, account_id: int, explain: int = 0) -> dict[str, Any]:
     prefs = get_prefs(db, owner)
     ap = prefs["alerts"]
     suppressed = {"disabled": 0, "category": 0, "severity": 0, "threshold": 0, "duplicate": 0, "rate_limit": 0}
@@ -221,14 +221,15 @@ def generate_alerts(db: Session, owner: str, account_id: int, explain: int = 2) 
         created.append(a)
     db.commit()
 
-    if created and explain:
+    from ..repository import ai_allowed
+    if created and explain and ai_allowed(db, owner):
         from ..ai.sanitize import financial_context
         from ..ai.service import explain_alert
         b = get_baseline(db, account_id)
         ctx = financial_context(b)
         for a in created[:explain]:
             res = explain_alert(db, {"title": a.title, "category": a.category, "relevance": a.relevance,
-                                     "modeled_impact": a.modeled_impact, "suggested_action": a.suggested_action}, ctx)
+                                     "modeled_impact": a.modeled_impact, "suggested_action": a.suggested_action}, ctx, cache_scope=owner)
             a.explanation = res["content"]["explanation"]
             a.explanation_engine = res["engine"]
         db.commit()

@@ -14,6 +14,7 @@ from ..ai.snowflake import SnowflakeUnavailable, insights_second_opinion
 from ..auth import Principal, current_principal
 from ..core.attention import compute_attention
 from ..core.insights import build_features, run_insights
+from ..repository import ai_allowed
 from ..db import get_db
 
 router = APIRouter(prefix="/api/insights", tags=["insights"])
@@ -113,8 +114,10 @@ def needs_attention(limit: int = Query(50, ge=1, le=500), offset: int = Query(0,
 
 
 @router.post("/snowflake-review")
-def snowflake_review(p: Principal = Depends(current_principal), db: Session = Depends(get_db)):
+def snowflake_review(p: Principal = Depends(_require_staff), db: Session = Depends(get_db)):
     """Optional: independent narrative of the computed findings via Snowflake Cortex."""
+    if not ai_allowed(db, p.sub):
+        return {"available": False, "reason": "AI is turned off in Settings"}
     data = compute(db)
     if not data.get("available"):
         return {"available": False, "reason": data.get("reason")}

@@ -22,6 +22,7 @@ DEFAULT_PREFS: dict[str, Any] = {
     "interests": ["inflation", "interest_rate", "energy", "employment"],
     "allocation_overrides": {},
     "display": {"reduced_motion": False, "enable_3d": True, "currency": "CAD"},
+    "privacy": {"personalized_ai": True},
     "watched_accounts": [],
 }
 
@@ -43,7 +44,12 @@ class AlertPrefs(BaseModel):
     quiet_hours: QuietHours | None = None
 
 
+class PrivacyPrefs(BaseModel):
+    personalized_ai: bool | None = None
+
+
 class PrefsPatch(BaseModel):
+    privacy: PrivacyPrefs | None = None
     alerts: AlertPrefs | None = None
     channels: dict[str, Any] | None = None
     interests: list[str] | None = Field(None, max_length=20)
