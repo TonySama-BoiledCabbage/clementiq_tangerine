@@ -24,7 +24,7 @@ export function AIInsightCard({ title = "Explain with Clement Gemini", endpoint,
     <Card className="overflow-hidden">
       <div className="flex items-center justify-between gap-2 border-b border-line bg-gradient-to-r from-violet-50 to-peach px-4 py-3 dark:from-violet-950/40">
         <div className="flex items-center gap-2"><Sparkles className="size-4 text-invest" /><p className="text-sm font-semibold">{title}</p></div>
-        <Button size="sm" variant="outline" onClick={() => m.mutate()} disabled={m.isPending}>{m.isPending ? <Spinner /> : null}{res ? "Regenerate" : "Explain"}</Button>
+        <Button size="sm" variant="outline" onClick={() => m.mutate()} disabled={m.isPending || !!res}>{m.isPending ? <Spinner /> : null}{res ? "Explanation ready" : "Explain"}</Button>
       </div>
       <div className="space-y-3 p-4 text-sm">
         {m.isError && <ErrorState error={m.error} retry={() => m.mutate()} />}
