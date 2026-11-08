@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   // Same-origin API: the browser calls /api/*, Next proxies to FastAPI (no CORS, no exposed backend URL).
   async rewrites() {
+    // Vercel Services routes /api directly to FastAPI; localhost is development-only.
+    if (process.env.VERCEL && !process.env.API_PROXY_TARGET) return [];
     return [{ source: "/api/:path*", destination: `${API_TARGET}/api/:path*` }];
   },
   async headers() {
